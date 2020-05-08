@@ -1,4 +1,4 @@
-# magellen_ml说明
+# magellan_ml说明
 这个是一个旨在提供Machine Learning和Deep Learning标准计算工具的Python项目，定期发布到`pipy.org`。
 
 目前提供以下模块：
