@@ -1,5 +1,5 @@
 # magellen_ml说明
-这个是一个旨在提供标准计算工具的python项目，定期发布到`pipy.org`。
+这个是一个旨在提供Machine Learning和Deep Learning标准计算工具的Python项目，定期发布到`pipy.org`。
 
 目前提供以下模块：
 * mag_util: 提供了计算各种指标的工具方法，包括auc,ks,iv,psi等指标的计算。
