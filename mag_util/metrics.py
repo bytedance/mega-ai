@@ -4,8 +4,8 @@ def show_func():
 
 def cal_auc(prob, labels):
     """Calculate AUC"""
-    f = list(zip(prob,labels))
-    rank = [values2 for values1,values2 in sorted(f, key=lambda x:x[0])]
+    pairs = list(zip(prob, labels))
+    rank = [values2 for values1, values2 in sorted(pairs, key=lambda x:x[0])]
     rankList = [i+1 for i in range(len(rank)) if rank[i]==1]
     posNum = 0
     negNum = 0
@@ -18,6 +18,7 @@ def cal_auc(prob, labels):
     auc = (sum(rankList)- (posNum*(posNum+1))/2)/(posNum*negNum)
     
     return auc
+    
 
 def cal_ks():
     print(0.34)
@@ -29,4 +30,4 @@ def cal_iv():
     print('%s\t%.6f' % ('ugc_embedding'.ljust(24), 0.123456))
 
 def cal_desc():
-    print('desc')
+    print('desc')03:16 PM
