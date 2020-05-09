@@ -30,4 +30,4 @@ def cal_iv():
     print('%s\t%.6f' % ('ugc_embedding'.ljust(24), 0.123456))
 
 def cal_desc():
-    print('desc')03:16 PM
+    print('desc')
