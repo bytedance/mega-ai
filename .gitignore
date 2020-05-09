@@ -1,2 +1,3 @@
 dist/*
+.vscode/*
 magellan_ml.egg-info/*

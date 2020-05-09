@@ -9,5 +9,9 @@ setup(name='magellan-ml',
       packages=find_packages(),
       include_package_data = True,
       platforms = 'any',
-      install_requires = [],
+      python_requires='>=3',
+      install_requires = [
+            'pandas',
+            'numpy'
+      ],
       zip_safe=False)
