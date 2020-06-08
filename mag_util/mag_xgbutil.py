@@ -17,7 +17,7 @@ def get_xgboost_feature_imps(xgb_model_, importance_type, is_sorted=False, filte
 
     # find the feature which  importance value equal 0
     if not filter_zero_imps:
-        for feat in model.get_booster().feature_names:
+        for feat in xgb_model_.get_booster().feature_names:
             if feat not in feature_map_.keys():
                 feature_map_[feat] = 0
 
