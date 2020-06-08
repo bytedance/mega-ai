@@ -27,11 +27,11 @@ $ python install .
 以`mag_util.metrics`模块为例，安装完成之后，可以使用以下方法导入使用
 
 ```
-from mag_util import metrics
+from mag_util import mag_metrics
 
-metrics.show_func()
-metrics.cal_auc()
-metrics.cal_psi()
+mag_metrics.show_func()
+mag_metrics.cal_auc()
+mag_metrics.cal_psi()
 ```
 
 # 打包发布
