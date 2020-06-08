@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 setup(name='magellan-ml',
-      version='0.0.2',
+      version='0.0.3',
       description='Some computing tools with machine learning, python 3.6+.',
       url='http://github.com/zhangliang605/magellan_ml',
       author='zhangliang.thanks',

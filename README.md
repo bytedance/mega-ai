@@ -33,3 +33,12 @@ metrics.show_func()
 metrics.cal_auc()
 metrics.cal_psi()
 ```
+
+# 打包发布
+
+```
+$ cd /path/to/magellan_ml
+$ python setup.py sdist bdist_wheel
+$ pip install twine
+$ twine upload dist/*
+```

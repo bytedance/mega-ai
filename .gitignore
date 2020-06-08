@@ -1,3 +1,5 @@
 dist/*
 .vscode/*
+dataset/*
+build/*
 magellan_ml.egg-info/*
