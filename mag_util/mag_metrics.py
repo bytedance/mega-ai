@@ -2,7 +2,7 @@ def show_func():
     """Show functions provided in metrics module"""
     print("cal_auc, cal_ks, cal_psi, cal_iv, cal_desc")
 
-def cal_auc(prob, labels):
+def cal_auc(labels, prob):
     """Calculate AUC"""
     pairs = list(zip(prob, labels))
     rank = [label_value for prob_value, label_value in sorted(pairs, key=lambda x:x[0])]
@@ -33,7 +33,7 @@ def cal_psi(base_values, curr_values):
     * base_values: a array , list, numpy array or pandas series with numberic elements
     * curr_values: a array , list, numpy array or pandas series with numberic elements
     '''
-    
+
     return 0.001
 
 def cal_iv():
