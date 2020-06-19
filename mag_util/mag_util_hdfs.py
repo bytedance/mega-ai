@@ -11,7 +11,7 @@ def hdfs_to_local(hdfs_path, local_path, is_txt = True):
 
     res = ''
     if (is_txt):
-        f=os.popen("hadoop dfs -text {} >> {}".format(hdfs_path, local_path))
+        f=os.popen("hadoop dfs -text {} > {}".format(hdfs_path, local_path))
         res = f.read()
     else:
         f=os.popen("hadoop dfs -get {} {}".format(hdfs_path, local_path))
