@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def get_xgboost_feature_imps(xgb_model_, importance_type, is_sorted=False, filter_zero_imps=False):
     """Get xgboost feature importance from XGBoost Model
     params:
@@ -26,7 +27,6 @@ def get_xgboost_feature_imps(xgb_model_, importance_type, is_sorted=False, filte
     feature_imps_df_['importance'] = feature_map_.values()
     feature_imps_df_ = feature_imps_df_.set_index("feature").loc[xgb_model_.get_booster().feature_names, :].\
         reset_index().rename(columns={"index": "feature"})
-
 
     if is_sorted:
         feature_imps_df_ = feature_imps_df_.sort_values(by='importance', ascending=False)
