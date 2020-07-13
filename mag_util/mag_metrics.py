@@ -1,19 +1,18 @@
-import math
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_curve
-from sklearn.metrics import roc_auc_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 
-import warnings
-warnings.filterwarnings("ignore")
+"""
+    Author: huangning.honey
+    Date: 2020/07/13
+    Function: Integrating common model evaluation methods and feature evaluation indexes
+"""
 
 
 def show_func():
-    """
-        提供所有的评估方法
-    """
+
     print("Feature evaluation methods:")
     print("cal_iv, cal_feature_coverage")
     print("<==========================================>")
