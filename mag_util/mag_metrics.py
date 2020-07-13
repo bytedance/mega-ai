@@ -127,10 +127,11 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10):
 
     def get_ivi(input_df, label_name, pos_num, neg_num):
 
-        posi_num, negi_num = sum(cur_group_df[label_name] == 1), sum(cur_group_df[label_name] == 0)
+        posi_num, negi_num = sum(input_df[label_name] == 1), sum(input_df[label_name] == 0)
         posri, negri = (posi_num + 0.0001) * 1.0 / pos_num, (negi_num + 0.0001) * 1.0 / neg_num
+        woei = np.log(posri / negri)
         ivi = (posri - negri) * np.log(posri / negri)
-        return ivi
+        return ivi, woei
 
     # Extract feature list
     df_.fillna(0, inplace=True)
@@ -143,12 +144,15 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10):
     for col_name in feat_list:
 
         iv_total = 0
+        cur_feat_woe = {}
 
         # Determine the number of groups
         if len(df_[col_name].unique()) < k_part:
             for feat_value in df_[col_name].unique():
                 cur_group_df = df_[df_[col_name] == feat_value]
-                iv_total += get_ivi(cur_group_df, label_name, pos_num, neg_num)
+                ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
+                cur_feat_woe[[feat_value]] = woei
+                iv_total += ivi
         else:
 
             # Change category variables into numerical variables
@@ -160,11 +164,12 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10):
             cur_feat_interval = pd.qcut(df_[col_name], k_part, duplicates="drop").unique()
             for interval in cur_feat_interval:
                 cur_group_df = df_[(df_[col_name] > interval.left) & (df_[col_name] <= interval.right)]
-                iv_total += get_ivi(cur_group_df, label_name, pos_num, neg_num)
+                ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
+                cur_feat_woe[interval] = woei
+                iv_total += ivi
+        iv_dict[col_name] = [cur_feat_woe, iv_total]
 
-        iv_dict[col_name] = iv_total
-
-    iv_df = pd.DataFrame.from_dict(iv_dict, orient="index", columns=["iv_value"])
+    iv_df = pd.DataFrame.from_dict(iv_dict, orient="index", columns=["woe_value", "iv_value"])
     iv_df = iv_df.reset_index().rename(columns={"index": "feature"})
     if is_sorted:
         iv_df.sort_values(by="iv_value", inplace=True, ascending=False, ignore_index=True)
@@ -269,10 +274,11 @@ if __name__ == "__main__":
     y_train_pred = lr.predict_proba(X_train)[:, 1]
     y_test_pred = lr.predict_proba(X_test)[:, 1]
     show_func()
-    # print()
-    # print("cal_iv: ")
-    # print(cal_iv(res, "SeriousDlqin2yrs"))
-    # print("cal_cover_: ")
+    print()
+    print("cal_iv: ")
+    print(cal_iv(res, "SeriousDlqin2yrs"))
+
+    # print("cal_coverage: ")
     # print(cal_feature_coverage(res))
     # print()
     # print("cal_auc: ", cal_auc(y_train, y_train_pred))
