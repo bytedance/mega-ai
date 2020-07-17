@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_curve
+from scipy.stats import chi2
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
+
 
 """
     Author: huangning.honey
@@ -114,13 +116,14 @@ def cal_psi(base_score, cur_score, k_part=10):
     return psi
 
 
-def cal_iv(df_, label_name, is_sorted=True, k_part=10):
+def cal_iv(df_, label_name, is_sorted=True, k_part=10, bin_type="same_frequency"):
 
     """ Calculate iv
     :param df_: input data
     :param label_name: the name of label
     :param is_sorted: Sort for IV value
     :param k_part: number of buckets
+    :param bin_type: frequency or chiSquare
     :return: iv_df
     """
 
@@ -155,17 +158,48 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10):
         else:
 
             # Change category variables into numerical variables
-            if df_[col_name].dtypes == "object":
+            if df_[col_name].dtypes in (np.dtype('bool'), np.dtype('object')):
                 label_encoder = {label: idx for idx, label in enumerate(np.unique(df_[col_name]))}
                 df_[col_name] = df_[col_name].map(label_encoder)
 
-            # Calculate the grouping of each value for the current feature
-            cur_feat_interval = pd.qcut(df_[col_name], k_part, duplicates="drop").unique()
-            for interval in cur_feat_interval:
-                cur_group_df = df_[(df_[col_name] > interval.left) & (df_[col_name] <= interval.right)]
-                ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
-                cur_feat_woe[interval] = woei
-                iv_total += ivi
+            if bin_type == "chiSquare":
+                if len(df_[col_name].unique()) >= 100:
+                    print("current feature '{}' is not a category feature, so bin_type of current feature is "
+                          "automatically converted to 'same_frequency'".format(col_name))
+
+                    cur_feat_interval = pd.qcut(df_[col_name], k_part, duplicates="drop").unique()
+                    for interval in cur_feat_interval:
+                        cur_group_df = df_[(df_[col_name] > interval.left) & (df_[col_name] <= interval.right)]
+                        ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
+                        cur_feat_woe[interval] = woei
+                        iv_total += ivi
+                else:
+                    chi2_obj = Chi2Binning()
+                    chi2_df = chi2_obj.cal_chi2_value(df_, col_name, label_name)
+                    cur_feat_interval = chi2_obj.chi2_merge_interval(chi2_df, k_part)[col_name]
+                    for i in range(len(cur_feat_interval)):
+                        if i == 0:
+                            cur_group_df = df_[(df_[col_name] <= cur_feat_interval[i])]
+                            interval = "(-inf, " + str(i) + "]"
+                        else:
+                            cur_group_df = df_[(df_[col_name] > cur_feat_interval[i-1]) & (df_[col_name] <= cur_feat_interval[i])]
+                            interval = "(" + str(i-1) + ", " + str(i) + "]"
+                        ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
+                        cur_feat_woe[interval] = woei
+                        iv_total += ivi
+
+            # select a binning method
+            elif bin_type == "same_frequency":
+                # Calculate the grouping of each value for the current feature
+                cur_feat_interval = pd.qcut(df_[col_name], k_part, duplicates="drop").unique()
+                for interval in cur_feat_interval:
+                    cur_group_df = df_[(df_[col_name] > interval.left) & (df_[col_name] <= interval.right)]
+                    ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
+                    cur_feat_woe[interval] = woei
+                    iv_total += ivi
+            else:
+                print("The current method {} is not implemented".format(bin_type))
+                return
         iv_dict[col_name] = [cur_feat_woe, iv_total]
 
     iv_df = pd.DataFrame.from_dict(iv_dict, orient="index", columns=["woe_value", "iv_value"])
@@ -260,22 +294,117 @@ def cal_feature_coverage(df_, col_no_cover_dict={}, col_handler_dict={}, cols_sk
     return feat_coverage_df
 
 
+class Chi2Binning:
+    """
+        Chi square box
+    """
+
+    # calculate chi2 value of every binning of the select feature
+    def cal_chi2_value(self, df_, feat_name, label_name):
+
+        pos_num = df_[label_name].sum()
+        all_num = df_.shape[0]
+        expected_ratio = pos_num/all_num
+
+        # Arrange a feature value from small to large
+        df_.dropna(inplace=True)
+        feat_value_list = sorted(df_[feat_name].unique())
+
+        # cal chi2 statistic in every interval
+        chi2_list = []
+        pos_list = []
+        expected_pos_list = []
+
+        for feat_value in feat_value_list:
+
+            temp_pos_num = df_.loc[df_[feat_name] == feat_value, label_name].sum()
+            temp_all_num = df_.loc[df_[feat_name] == feat_value, label_name].count()
+
+            expected_pos_num = temp_all_num * expected_ratio
+            chi2_value = (temp_pos_num - expected_pos_num) ** 2 / expected_pos_num
+            chi2_list.append(chi2_value)
+            pos_list.append(temp_all_num)
+            expected_pos_list.append(expected_pos_num)
+
+        # Export results to dataframe
+        chi2_df = pd.DataFrame({feat_name: feat_value_list, "chi2_value": chi2_list, "pos_num": pos_list, "expected_pos_cnt": expected_pos_list})
+        return chi2_df
+
+
+    # control the max group num less than interval
+    def chi2_merge_interval(self, chi2_df, dfree=4, significance_level=0.1, max_interval=5):
+
+        group_num = len(chi2_df)
+        while group_num > max_interval:
+            min_index = chi2_df[chi2_df["chi2_value"] == chi2_df["chi2_value"].min()].index[0]
+            if min_index == 0:
+                chi2_df = self.merge(chi2_df, min_index+1, min_index)
+            elif min_index == group_num-1:
+                chi2_df = self.merge(chi2_df, min_index, min_index-1)
+            else:
+                if chi2_df.loc[min_index-1, "chi2_value"] > chi2_df.loc[min_index + 1, "chi2_value"]:
+                    chi2_df = self.merge(chi2_df, min_index+1, min_index)
+                else:
+                    chi2_df = self.merge(chi2_df, min_index, min_index-1)
+            group_num = len(chi2_df)
+
+        return chi2_df
+
+    # The minimum chi square value should be greater than or equal to the quantile corresponding to the significance
+    # level (so as to ensure that the probability of the first type of error < = alpha), or the number of intervals
+    # of merge is less than the specified number
+    def chi2_merge(self, chi2_df, dfree=4, significance_level=0.1, max_interval=5):
+
+        quantile = chi2.isf(q=significance_level, df=dfree)
+        min_chi2_value = chi2_df["chi2_value"].min()
+        group_num = len(chi2_df)
+
+        while min_chi2_value < quantile and group_num > max_interval:
+
+            # find the index of min chi2 value
+            min_index = chi2_df[chi2_df["chi2_value"] == chi2_df["chi2_value"].min()].index[0]
+
+            if min_index == 0:
+                chi2_df = self.merge(chi2_df, min_index+1, min_index)
+            elif min_index == group_num-1:
+                chi2_df = self.merge(chi2_df, min_index, min_index-1)
+            else:
+                if chi2_df.loc[min_index-1, "chi2_value"] > chi2_df.loc[min_index + 1, "chi2_value"]:
+                    chi2_df = self.merge(chi2_df, min_index+1, min_index)
+                else:
+                    chi2_df = self.merge(chi2_df, min_index, min_index-1)
+            group_num = len(chi2_df)
+        return chi2_df
+
+# merge two chi2_value through index
+    def merge(self, chi2_df, merge_index, origin_index):
+
+        chi2_df.loc[merge_index, "pos_num"] = chi2_df.loc[merge_index, "pos_num"] + chi2_df.loc[origin_index, "pos_num"]
+        chi2_df.loc[merge_index, "expected_pos_cnt"] = chi2_df.loc[merge_index, "expected_pos_cnt"] + chi2_df.loc[origin_index, "expected_pos_cnt"]
+        chi2_df.loc[merge_index, "chi2_value"] = (chi2_df.loc[merge_index, "pos_num"] - chi2_df.loc[merge_index, "expected_pos_cnt"])**2 / chi2_df.loc[merge_index, "expected_pos_cnt"]
+        chi2_df.drop(origin_index, axis=0, inplace=True)
+        chi2_df.reset_index(drop=True, inplace=True)
+
+        return chi2_df
+
+
 if __name__ == "__main__":
 
     # test code
     res = pd.read_csv("/Users/bytedance/Coding/Test/data/cs-training.csv", index_col=0)
     res.fillna(0, inplace=True)
-    y = res.iloc[:, 0]
-    X = res.iloc[:, 1:]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    lr = LogisticRegression()
-    lr.fit(X_train, y_train)
-    y_train_pred = lr.predict_proba(X_train)[:, 1]
-    y_test_pred = lr.predict_proba(X_test)[:, 1]
-    show_func()
+
+    # y = res.iloc[:, 0]
+    # X = res.iloc[:, 1:]
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    # lr = LogisticRegression()
+    # lr.fit(X_train, y_train)
+    # y_train_pred = lr.predict_proba(X_train)[:, 1]
+    # y_test_pred = lr.predict_proba(X_test)[:, 1]
+    # # show_func()
     print()
     print("cal_iv: ")
-    print(cal_iv(res, "SeriousDlqin2yrs"))
+    print(cal_iv(res, "SeriousDlqin2yrs", is_sorted=True, k_part=10, bin_type="chiSquare"))
 
     # print("cal_coverage: ")
     # print(cal_feature_coverage(res))
