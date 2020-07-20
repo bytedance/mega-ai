@@ -162,7 +162,7 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10, bin_type="same_frequency"
         elif bin_type == "same_frequency":
             cur_feat_interval = sorted(pd.qcut(df_[col_name], k_part, duplicates="drop").unique())
             # 将分割区间变成边界列表
-            boundary_list = [cur_feat_interval[0].left-0.0001] + [value.right for value in cur_feat_interval]
+            boundary_list = [cur_feat_interval[0].left] + [value.right for value in cur_feat_interval]
 
         # 决策树分箱
         elif bin_type == "decision_tree":
@@ -181,7 +181,7 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10, bin_type="same_frequency"
 
             cur_feat_interval = chiSquare_binning_boundary(df_, col_name, label_name, k_part)
             df_[col_name] = df_[col_name].astype("float64")
-            boundary_list = [-0.001] + list(cur_feat_interval)
+            boundary_list = [cur_feat_interval.min()-1] + list(cur_feat_interval)
 
         else:
             print("The current {} method is not implemented".format(bin_type))
