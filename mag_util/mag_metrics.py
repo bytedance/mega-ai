@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_curve
 from scipy.stats import chi2
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 
@@ -135,12 +136,12 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10, bin_type="same_frequency"
         ivi = (posri - negri) * np.log(posri / negri)
         return ivi, woei
 
-    # Extract feature list
+    # 提取特征列表
     df_.fillna(0, inplace=True)
     feat_list = list(df_.columns)
     feat_list.remove(label_name)
 
-    # Calculate the IV value of the every feature
+    # 计算每个特征的iv值
     iv_dict = {}
     pos_num, neg_num = sum(df_[label_name] == 1), sum(df_[label_name] == 0)
     for col_name in feat_list:
@@ -148,58 +149,51 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10, bin_type="same_frequency"
         iv_total = 0
         cur_feat_woe = {}
 
-        # Determine the number of groups
+        # 将类别特征变成数值特征
+        if df_[col_name].dtypes in (np.dtype('bool'), np.dtype('object')):
+            label_encoder = {label: idx for idx, label in enumerate(np.unique(df_[col_name]))}
+            df_[col_name] = df_[col_name].map(label_encoder)
+
+        # 如果特征取值个数小于默认的分组个数，那么直接按照枚举值进行分组
         if len(df_[col_name].unique()) < k_part:
-            for feat_value in df_[col_name].unique():
-                cur_group_df = df_[df_[col_name] == feat_value]
-                ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
-                cur_feat_woe[[feat_value]] = woei
-                iv_total += ivi
+            boundary_list = [df_[col_name].min() - 1] + [df_[col_name].unique().sort()]
+
+        # 等频分箱
+        elif bin_type == "same_frequency":
+            cur_feat_interval = sorted(pd.qcut(df_[col_name], k_part, duplicates="drop").unique())
+            # 将分割区间变成边界列表
+            boundary_list = [cur_feat_interval[0].left-0.0001] + [value.right for value in cur_feat_interval]
+
+        # 决策树分箱
+        elif bin_type == "decision_tree":
+            boundary_list = decisionTree_binning_boundary(df_[col_name], df_[label_name], k_part)
+
+        # 卡方分箱
+        elif bin_type == "chi_square":
+
+            # 如果特征的取值个数大于100，那么需要先将其等频离散化成100个值，每个取值为相应区间的右端点，然后再采用卡方分箱
+            if len(df_[col_name].unique()) >= 100:
+                cur_feat_interval = pd.qcut(df_[col_name], 5, duplicates="drop")
+                df_[col_name] = cur_feat_interval
+
+                # 根据划分区间左右端点的平均数作为离散的枚举值，将连续特征转成离散特征
+                df_[col_name] = df_[col_name].apply(lambda x: float((x.left + x.right)/2))
+
+            cur_feat_interval = chiSquare_binning_boundary(df_, col_name, label_name, k_part)
+            df_[col_name] = df_[col_name].astype("float64")
+            boundary_list = [-0.001] + list(cur_feat_interval)
+
         else:
+            print("The current {} method is not implemented".format(bin_type))
+            return
 
-            # Change category variables into numerical variables
-            if df_[col_name].dtypes in (np.dtype('bool'), np.dtype('object')):
-                label_encoder = {label: idx for idx, label in enumerate(np.unique(df_[col_name]))}
-                df_[col_name] = df_[col_name].map(label_encoder)
+        for i in range(len(boundary_list)-1):
+            cur_group_df = df_[(df_[col_name] > boundary_list[i]) & (df_[col_name] <= boundary_list[i+1])]
+            interval = "(" + str(boundary_list[i]) + ", " + str(boundary_list[i+1]) + "]"
+            ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
+            cur_feat_woe[interval] = woei
+            iv_total += ivi
 
-            if bin_type == "chiSquare":
-                if len(df_[col_name].unique()) >= 100:
-                    print("current feature '{}' is not a category feature, so bin_type of current feature is "
-                          "automatically converted to 'same_frequency'".format(col_name))
-
-                    cur_feat_interval = pd.qcut(df_[col_name], k_part, duplicates="drop").unique()
-                    for interval in cur_feat_interval:
-                        cur_group_df = df_[(df_[col_name] > interval.left) & (df_[col_name] <= interval.right)]
-                        ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
-                        cur_feat_woe[interval] = woei
-                        iv_total += ivi
-                else:
-                    chi2_obj = Chi2Binning()
-                    chi2_df = chi2_obj.cal_chi2_value(df_, col_name, label_name)
-                    cur_feat_interval = chi2_obj.chi2_merge_interval(chi2_df, k_part)[col_name]
-                    for i in range(len(cur_feat_interval)):
-                        if i == 0:
-                            cur_group_df = df_[(df_[col_name] <= cur_feat_interval[i])]
-                            interval = "(-inf, " + str(i) + "]"
-                        else:
-                            cur_group_df = df_[(df_[col_name] > cur_feat_interval[i-1]) & (df_[col_name] <= cur_feat_interval[i])]
-                            interval = "(" + str(i-1) + ", " + str(i) + "]"
-                        ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
-                        cur_feat_woe[interval] = woei
-                        iv_total += ivi
-
-            # select a binning method
-            elif bin_type == "same_frequency":
-                # Calculate the grouping of each value for the current feature
-                cur_feat_interval = pd.qcut(df_[col_name], k_part, duplicates="drop").unique()
-                for interval in cur_feat_interval:
-                    cur_group_df = df_[(df_[col_name] > interval.left) & (df_[col_name] <= interval.right)]
-                    ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
-                    cur_feat_woe[interval] = woei
-                    iv_total += ivi
-            else:
-                print("The current method {} is not implemented".format(bin_type))
-                return
         iv_dict[col_name] = [cur_feat_woe, iv_total]
 
     iv_df = pd.DataFrame.from_dict(iv_dict, orient="index", columns=["woe_value", "iv_value"])
@@ -250,7 +244,6 @@ def cal_feature_coverage(df_, col_no_cover_dict={}, col_handler_dict={}, cols_sk
 
     row_num, col_num = df_.shape[0], df_.shape[1]
     feat_coverage_dict = {}
-    feat_dtype_dict = {}
     for col_name in df_.columns:
         if col_name in cols_skip:
             continue
@@ -294,98 +287,98 @@ def cal_feature_coverage(df_, col_no_cover_dict={}, col_handler_dict={}, cols_sk
     return feat_coverage_df
 
 
-class Chi2Binning:
+def decisionTree_binning_boundary(feat_value, label_value, max_group_num):
+
     """
-        Chi square box
+    Using decision tree to obtain the list of boundary values of optimal bin
+    :param feat_value:
+    :param label_value:
+    :return:
     """
 
-    # calculate chi2 value of every binning of the select feature
-    def cal_chi2_value(self, df_, feat_name, label_name):
+    # store optimal binning boundary value
+    boundary = []
+    label_value = label_value.values
+    feat_value = feat_value.values.reshape(-1, 1)
+    clf = DecisionTreeClassifier(criterion='entropy',                 # Division of information entropy minimization criterion
+                                 max_leaf_nodes=max_group_num,        # Maximum number of leaf nodes
+                                 min_samples_leaf=0.05)               # The minimum proportion of leaf node samples
 
-        pos_num = df_[label_name].sum()
-        all_num = df_.shape[0]
-        expected_ratio = pos_num/all_num
+    clf.fit(feat_value, label_value)
 
-        # Arrange a feature value from small to large
-        df_.dropna(inplace=True)
-        feat_value_list = sorted(df_[feat_name].unique())
+    n_nodes = clf.tree_.node_count
+    children_left = clf.tree_.children_left
+    children_right = clf.tree_.children_right
+    threshold = clf.tree_.threshold
 
-        # cal chi2 statistic in every interval
-        chi2_list = []
-        pos_list = []
-        expected_pos_list = []
+    for i in range(n_nodes):
+        if children_left[i] != children_right[i]:
+            boundary.append(threshold[i])
+    boundary.sort()
+    min_x = feat_value.min() - 0.0001
+    max_x = feat_value.max()
+    boundary = [min_x] + boundary + [max_x]
 
-        for feat_value in feat_value_list:
-
-            temp_pos_num = df_.loc[df_[feat_name] == feat_value, label_name].sum()
-            temp_all_num = df_.loc[df_[feat_name] == feat_value, label_name].count()
-
-            expected_pos_num = temp_all_num * expected_ratio
-            chi2_value = (temp_pos_num - expected_pos_num) ** 2 / expected_pos_num
-            chi2_list.append(chi2_value)
-            pos_list.append(temp_all_num)
-            expected_pos_list.append(expected_pos_num)
-
-        # Export results to dataframe
-        chi2_df = pd.DataFrame({feat_name: feat_value_list, "chi2_value": chi2_list, "pos_num": pos_list, "expected_pos_cnt": expected_pos_list})
-        return chi2_df
+    return boundary
 
 
-    # control the max group num less than interval
-    def chi2_merge_interval(self, chi2_df, dfree=4, significance_level=0.1, max_interval=5):
+def chiSquare_binning_boundary(df_, feat_name, label_name, k_part):
+
+    pos_num = df_[label_name].sum()
+    all_num = df_.shape[0]
+    expected_ratio = pos_num/all_num
+
+    # Arrange a feature value from small to large
+    df_.dropna(inplace=True)
+    feat_value_list = sorted(df_[feat_name].unique())
+
+    # cal chi2 statistic in every interval
+    chi2_list = []
+    pos_list = []
+    expected_pos_list = []
+
+    for feat_value in feat_value_list:
+
+        temp_pos_num = df_.loc[df_[feat_name] == feat_value, label_name].sum()
+        temp_all_num = df_.loc[df_[feat_name] == feat_value, label_name].count()
+
+        expected_pos_num = temp_all_num * expected_ratio
+        chi2_value = (temp_pos_num - expected_pos_num) ** 2 / expected_pos_num
+        chi2_list.append(chi2_value)
+        pos_list.append(temp_all_num)
+        expected_pos_list.append(expected_pos_num)
+
+    # Export results to dataframe
+    chi2_df = pd.DataFrame({feat_name: feat_value_list, "chi2_value": chi2_list, "pos_num": pos_list, "expected_pos_cnt": expected_pos_list})
+
+    # 根据index合并chi2_df中相邻位置的数值
+    def merge(input_df, merge_index, origin_index):
+
+        input_df.loc[merge_index, "pos_num"] = input_df.loc[merge_index, "pos_num"] + input_df.loc[origin_index, "pos_num"]
+        input_df.loc[merge_index, "expected_pos_cnt"] = input_df.loc[merge_index, "expected_pos_cnt"] + input_df.loc[origin_index, "expected_pos_cnt"]
+        input_df.loc[merge_index, "input_value"] = (input_df.loc[merge_index, "pos_num"] - input_df.loc[merge_index, "expected_pos_cnt"])**2 / input_df.loc[merge_index, "expected_pos_cnt"]
+        input_df.drop(origin_index, axis=0, inplace=True)
+        input_df.reset_index(drop=True, inplace=True)
+
+        return input_df
+
+    # 计算当前特征的卡方分箱的个数，即当前特征的所有枚举值的个数
+    group_num = len(chi2_df)
+    while group_num > k_part:
+        min_index = chi2_df[chi2_df["chi2_value"] == chi2_df["chi2_value"].min()].index[0]
+        if min_index == 0:
+            chi2_df = merge(chi2_df, min_index+1, min_index)
+        elif min_index == group_num-1:
+            chi2_df = merge(chi2_df, min_index, min_index-1)
+        else:
+            if chi2_df.loc[min_index-1, "chi2_value"] > chi2_df.loc[min_index + 1, "chi2_value"]:
+                chi2_df = merge(chi2_df, min_index+1, min_index)
+            else:
+                chi2_df = merge(chi2_df, min_index, min_index-1)
 
         group_num = len(chi2_df)
-        while group_num > max_interval:
-            min_index = chi2_df[chi2_df["chi2_value"] == chi2_df["chi2_value"].min()].index[0]
-            if min_index == 0:
-                chi2_df = self.merge(chi2_df, min_index+1, min_index)
-            elif min_index == group_num-1:
-                chi2_df = self.merge(chi2_df, min_index, min_index-1)
-            else:
-                if chi2_df.loc[min_index-1, "chi2_value"] > chi2_df.loc[min_index + 1, "chi2_value"]:
-                    chi2_df = self.merge(chi2_df, min_index+1, min_index)
-                else:
-                    chi2_df = self.merge(chi2_df, min_index, min_index-1)
-            group_num = len(chi2_df)
 
-        return chi2_df
-
-    # The minimum chi square value should be greater than or equal to the quantile corresponding to the significance
-    # level (so as to ensure that the probability of the first type of error < = alpha), or the number of intervals
-    # of merge is less than the specified number
-    def chi2_merge(self, chi2_df, dfree=4, significance_level=0.1, max_interval=5):
-
-        quantile = chi2.isf(q=significance_level, df=dfree)
-        min_chi2_value = chi2_df["chi2_value"].min()
-        group_num = len(chi2_df)
-
-        while min_chi2_value < quantile and group_num > max_interval:
-
-            # find the index of min chi2 value
-            min_index = chi2_df[chi2_df["chi2_value"] == chi2_df["chi2_value"].min()].index[0]
-
-            if min_index == 0:
-                chi2_df = self.merge(chi2_df, min_index+1, min_index)
-            elif min_index == group_num-1:
-                chi2_df = self.merge(chi2_df, min_index, min_index-1)
-            else:
-                if chi2_df.loc[min_index-1, "chi2_value"] > chi2_df.loc[min_index + 1, "chi2_value"]:
-                    chi2_df = self.merge(chi2_df, min_index+1, min_index)
-                else:
-                    chi2_df = self.merge(chi2_df, min_index, min_index-1)
-            group_num = len(chi2_df)
-        return chi2_df
-
-# merge two chi2_value through index
-    def merge(self, chi2_df, merge_index, origin_index):
-
-        chi2_df.loc[merge_index, "pos_num"] = chi2_df.loc[merge_index, "pos_num"] + chi2_df.loc[origin_index, "pos_num"]
-        chi2_df.loc[merge_index, "expected_pos_cnt"] = chi2_df.loc[merge_index, "expected_pos_cnt"] + chi2_df.loc[origin_index, "expected_pos_cnt"]
-        chi2_df.loc[merge_index, "chi2_value"] = (chi2_df.loc[merge_index, "pos_num"] - chi2_df.loc[merge_index, "expected_pos_cnt"])**2 / chi2_df.loc[merge_index, "expected_pos_cnt"]
-        chi2_df.drop(origin_index, axis=0, inplace=True)
-        chi2_df.reset_index(drop=True, inplace=True)
-
-        return chi2_df
+    return chi2_df[feat_name]
 
 
 if __name__ == "__main__":
@@ -393,6 +386,10 @@ if __name__ == "__main__":
     # test code
     res = pd.read_csv("/Users/bytedance/Coding/Test/data/cs-training.csv", index_col=0)
     res.fillna(0, inplace=True)
+    print("cal_iv: ")
+    ans = cal_iv(res, "SeriousDlqin2yrs", is_sorted=True, k_part=10, bin_type="chi_square")
+    print(ans)
+    ans.to_csv("/Users/bytedance/Coding/Test/data/cs-training-iv-python-chiSquare.csv", index=False)
 
     # y = res.iloc[:, 0]
     # X = res.iloc[:, 1:]
@@ -402,9 +399,6 @@ if __name__ == "__main__":
     # y_train_pred = lr.predict_proba(X_train)[:, 1]
     # y_test_pred = lr.predict_proba(X_test)[:, 1]
     # # show_func()
-    print()
-    print("cal_iv: ")
-    print(cal_iv(res, "SeriousDlqin2yrs", is_sorted=True, k_part=10, bin_type="chiSquare"))
 
     # print("cal_coverage: ")
     # print(cal_feature_coverage(res))
