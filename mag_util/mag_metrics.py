@@ -10,18 +10,21 @@ from sklearn.model_selection import train_test_split
 """
     Author: huangning.honey
     Date: 2020/07/13
-    Function: Integrating common model evaluation methods and feature evaluation indexes
+    Function: 集成了一些评估分类模型表现的方法以及特征评估指标
 """
 
 
 def show_func():
 
-    print("Feature evaluation methods:")
-    print("cal_iv, cal_feature_coverage")
-    print("<==========================================>")
-    print("Model evaluation methods:")
-    print("cal_auc, cal_ks, cal_psi, cal_lift")
-
+    print("feature evaluation methods")
+    print("1.cal_iv")
+    print("2.cal_feature_coverage")
+    print("<--------------------------->")
+    print("model evaluation methods")
+    print("1.cal_auc")
+    print("2.cal_ks")
+    print("3.cal_psi")
+    print("4.cal_lift")
 
 def cal_ks(y_true, y_pred):
     """
@@ -45,6 +48,8 @@ def cal_auc(y_true, y_pred):
     * y_pred: 模型预测概率 [0,1]
     """
 
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
     rank = [label_value for prob_value, label_value in sorted(zip(y_pred, y_true), key=lambda x: x[0])]
     rank_list = [index + 1 for index, label_value in enumerate(rank) if label_value == 1]
     pos_num, neg_num = len(y_true[y_true == 1]), len(y_true[y_true == 0])
@@ -55,78 +60,166 @@ def cal_auc(y_true, y_pred):
 
 def cal_lift(y_true, y_pred, k_part=10):
     """Calculate lift
-    :param y_true: True label value
-    :param y_pred: Prediction probability
-    :param k_part:
+    :param y_true: 标签值
+    :param y_pred: 预测概率
+    :param k_part: 最大分箱个数
     :return: lift, depth, thresholds
     """
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
 
-    y_df = pd.DataFrame({
-        "y_pred": y_pred,
-        "y_true": y_true
-    })
-
-    # Determine threshold list
-    if len(y_df.y_pred.unique()) <= k_part:
-        thres_list = sorted(y_df.y_pred.unique(), reverse=True)
+    # 根据最大分箱个数确定阈值列表
+    if len(np.unique(y_pred)) <= k_part:
+        thres_list = sorted(np.unique(y_pred), reverse=True)
     else:
-        interval_df = pd.qcut(y_df.y_pred, k_part, duplicates="drop")
-        y_df["interval_right"] = pd.Series(interval_df).apply(lambda x: x.right)
-        thres_list = sorted(y_df["interval_right"].unique(), reverse=True)
+        intervals = sorted(np.unique(pd.qcut(y_pred, k_part, duplicates="drop")), reverse=True)
+        thres_list = [interval.right for interval in intervals]
 
-    lift, depth, thresholds = [], [], []
-    P = y_df[y_df.y_true == 1].y_pred
-    N = y_df[y_df.y_true == 0].y_pred
-    y_num = len(y_df)
-    p_rate = len(P)/y_num
-    for threshold in thres_list[1:]:
-        TP, FN, FP, TN = len(P[P >= threshold]), len(P[P < threshold]),  len(N[N >= threshold]), len(N[N <= threshold])
-        precision = TP/(TP+FP)
-        lift.append(precision/p_rate)
-        depth.append((TP + FP)/y_num)
+    lift, depth = [], []
+    y_pos_pred = y_pred[y_true == 1]
+    y_neg_pred = y_pred[y_true == 0]
+    y_num = y_true.shape[0]
+    pos_rate = y_pos_pred.shape[0]/y_num
+    for i in range(len(thres_list)):
+        TP, FN, FP = len(y_pos_pred[y_pos_pred > thres_list[i]]), len(y_pos_pred[y_pos_pred <= thres_list[i]]),  \
+                     len(y_neg_pred[y_neg_pred > thres_list[i]])
+        if TP+FP == 0:
+            lift.append(1)
+            depth.append(0)
+        else:
+            precision = TP/(TP+FP)
+            lift.append(precision/pos_rate)
+            depth.append((TP + FP)/y_num)
 
-    # Add the lift and depth values of the left boundary
-    lift.insert(0, 1)
-    depth.insert(0, 0)
-
-    return lift, depth, thresholds
+    return lift, depth, thres_list
 
 
 def cal_psi(base_score, cur_score, k_part=10):
     """Calculate PSI
-    :param base_score: Prediction probability of model on training set
-    :param cur_score: Prediction probability of model on testing set
-    :param k_part: Number of groups
+    :param base_score: 训练集上的预测概率
+    :param cur_score: 测试集上的预测概率
+    :param k_part: 最大分箱个数
     :return: PSI
     """
 
-    # According to the prediction probability, the box is divided
-    interval_series = pd.qcut(base_score, k_part, duplicates="drop")
-    interval_sorted = sorted(pd.Series(interval_series).unique())
-    interval_list = [(inter.left, inter.right) for inter in interval_sorted]
+    # 根据k_part获取分箱间隔值列表
+    if len(np.unique(base_score)) <= k_part:
+        thres_list = sorted(np.unique(base_score))
+        thres_list = [min(thres_list)-0.001] + thres_list
+    else:
+        intervals = sorted(np.unique(pd.qcut(base_score, k_part, duplicates="drop")), reverse=True)
+        thres_list = [intervals[0].left] + [interval.right for interval in intervals]
 
-    # The PSI value of each group was accumulated
     base_score_len = len(base_score)
     cur_score_len = len(cur_score)
     psi = 0
-    for left, right in interval_list:
-        base_rate = sum((np.array(base_score) > left) & (np.array(base_score) <= right))/base_score_len
-        cur_rate = sum((np.array(cur_score) > left) & (np.array(cur_score) <= right))/cur_score_len
+
+    # 计算每组的psi值
+    for i in range(len(thres_list[:-1])):
+        base_rate = sum((np.array(base_score) > thres_list[i]) & (np.array(base_score) <= thres_list[i+1]))/base_score_len
+        cur_rate = sum((np.array(cur_score) > thres_list[i]) & (np.array(cur_score) <= thres_list[i+1]))/cur_score_len
         psi += (base_rate - cur_rate) * np.log(base_rate/(cur_rate+0.0001))
 
     return psi
 
 
-def cal_iv(df_, label_name, is_sorted=True, k_part=10, bin_type="same_frequency"):
+def cal_iv(df_, label_name, is_sorted=True, k_part=10, bin_method="same_frequency"):
 
     """ Calculate iv
-    :param df_: input data
-    :param label_name: the name of label
-    :param is_sorted: Sort for IV value
-    :param k_part: number of buckets
-    :param bin_type: frequency or chiSquare
+    :param df_: 样本集
+    :param label_name: 标签名
+    :param is_sorted: 针对iv值是否排序
+    :param k_part: 最大的分箱个数
+    :param bin_method: 分箱类型，目前提供了等频分箱，卡方分箱以及决策树分箱
     :return: iv_df
     """
+
+    # 用卡方分箱计算指定特征的IV
+    def chiSquare_binning_boundary(df_, feat_name, label_name, k_part):
+
+        pos_num = df_[label_name].sum()
+        all_num = df_.shape[0]
+        expected_ratio = pos_num/all_num
+
+        # Arrange a feature value from small to large
+        df_.dropna(inplace=True)
+        feat_value_list = sorted(df_[feat_name].unique())
+
+        # cal chi2 statistic in every interval
+        chi2_list = []
+        pos_list = []
+        expected_pos_list = []
+
+        for feat_value in feat_value_list:
+
+            temp_pos_num = df_.loc[df_[feat_name] == feat_value, label_name].sum()
+            temp_all_num = df_.loc[df_[feat_name] == feat_value, label_name].count()
+
+            expected_pos_num = temp_all_num * expected_ratio
+            chi2_value = (temp_pos_num - expected_pos_num) ** 2 / expected_pos_num
+            chi2_list.append(chi2_value)
+            pos_list.append(temp_all_num)
+            expected_pos_list.append(expected_pos_num)
+
+        # Export results to dataframe
+        chi2_df = pd.DataFrame({feat_name: feat_value_list, "chi2_value": chi2_list, "pos_num": pos_list, "expected_pos_cnt": expected_pos_list})
+
+        # 根据index合并chi2_df中相邻位置的数值
+        def merge(input_df, merge_index, origin_index):
+
+            input_df.loc[merge_index, "pos_num"] = input_df.loc[merge_index, "pos_num"] + input_df.loc[origin_index, "pos_num"]
+            input_df.loc[merge_index, "expected_pos_cnt"] = input_df.loc[merge_index, "expected_pos_cnt"] + input_df.loc[origin_index, "expected_pos_cnt"]
+            input_df.loc[merge_index, "input_value"] = (input_df.loc[merge_index, "pos_num"] - input_df.loc[merge_index, "expected_pos_cnt"])**2 / input_df.loc[merge_index, "expected_pos_cnt"]
+            input_df.drop(origin_index, axis=0, inplace=True)
+            input_df.reset_index(drop=True, inplace=True)
+
+            return input_df
+
+        # 计算当前特征的卡方分箱的个数，即当前特征的所有枚举值的个数
+        group_num = len(chi2_df)
+        while group_num > k_part:
+            min_index = chi2_df[chi2_df["chi2_value"] == chi2_df["chi2_value"].min()].index[0]
+            if min_index == 0:
+                chi2_df = merge(chi2_df, min_index+1, min_index)
+            elif min_index == group_num-1:
+                chi2_df = merge(chi2_df, min_index, min_index-1)
+            else:
+                if chi2_df.loc[min_index-1, "chi2_value"] > chi2_df.loc[min_index + 1, "chi2_value"]:
+                    chi2_df = merge(chi2_df, min_index+1, min_index)
+                else:
+                    chi2_df = merge(chi2_df, min_index, min_index-1)
+
+            group_num = len(chi2_df)
+
+        return chi2_df[feat_name]
+
+    # 用决策树分箱计算指定特征的IV
+    def decisionTree_binning_boundary(feat_value, label_value, max_group_num):
+
+        # store optimal binning boundary value
+        boundary = []
+        label_value = label_value.values
+        feat_value = feat_value.values.reshape(-1, 1)
+        clf = DecisionTreeClassifier(criterion='entropy',                 # Division of information entropy minimization criterion
+                                     max_leaf_nodes=max_group_num,        # Maximum number of leaf nodes
+                                     min_samples_leaf=0.05)               # The minimum proportion of leaf node samples
+
+        clf.fit(feat_value, label_value)
+
+        n_nodes = clf.tree_.node_count
+        children_left = clf.tree_.children_left
+        children_right = clf.tree_.children_right
+        threshold = clf.tree_.threshold
+
+        for i in range(n_nodes):
+            if children_left[i] != children_right[i]:
+                boundary.append(threshold[i])
+        boundary.sort()
+        min_x = feat_value.min() - 0.0001
+        max_x = feat_value.max()
+        boundary = [min_x] + boundary + [max_x]
+
+        return boundary
 
     def get_ivi(input_df, label_name, pos_num, neg_num):
 
@@ -154,22 +247,21 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10, bin_type="same_frequency"
             label_encoder = {label: idx for idx, label in enumerate(np.unique(df_[col_name]))}
             df_[col_name] = df_[col_name].map(label_encoder)
 
-        # 如果特征取值个数小于默认的分组个数，那么直接按照枚举值进行分组
-        if len(df_[col_name].unique()) < k_part:
-            boundary_list = [df_[col_name].min() - 1] + [df_[col_name].unique().sort()]
-
         # 等频分箱
-        elif bin_type == "same_frequency":
-            cur_feat_interval = sorted(pd.qcut(df_[col_name], k_part, duplicates="drop").unique())
-            # 将分割区间变成边界列表
-            boundary_list = [cur_feat_interval[0].left] + [value.right for value in cur_feat_interval]
+        if bin_method == "same_frequency":
 
+            # 如果特征取值个数小于默认的分组个数，那么直接按照枚举值进行分组
+            if len(df_[col_name].unique()) < k_part:
+                boundary_list = [df_[col_name].min() - 0.001] + [df_[col_name].unique().sort()]
+            else:
+                cur_feat_interval = sorted(pd.qcut(df_[col_name], k_part, duplicates="drop").unique())
+                boundary_list = [cur_feat_interval[0].left] + [value.right for value in cur_feat_interval]
         # 决策树分箱
-        elif bin_type == "decision_tree":
+        elif bin_method == "decision_tree":
             boundary_list = decisionTree_binning_boundary(df_[col_name], df_[label_name], k_part)
 
         # 卡方分箱
-        elif bin_type == "chi_square":
+        elif bin_method == "chi_square":
 
             # 如果特征的取值个数大于100，那么需要先将其等频离散化成100个值，每个取值为相应区间的右端点，然后再采用卡方分箱
             if len(df_[col_name].unique()) >= 100:
@@ -206,15 +298,15 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10, bin_type="same_frequency"
 def cal_feature_coverage(df_, col_no_cover_dict={}, col_handler_dict={}, cols_skip=[], is_sorted=True):
     """analyze feature coverage for pandas dataframe
 
-    :param df_: input data
-    :param col_no_cover_dict: a dict for custom no-cover value. by default:
+    :param df_: 输入数据
+    :param col_no_cover_dict: 自定义特征指定数据类型的非覆盖值. 默认值:
             * int64: [0, -1]
             * float64: [0.0, -1.0]
             * object: []
             * bool: []
-    :param col_handler_dict: a dict for custom non-cover value statistics.
-    :param cols_skip: a list for skip cols which will not analyze the coverage.
-    :param is_sorted: Sort by coverage
+    :param col_handler_dict: 指定特征数据类型的覆盖率计算方法.
+    :param cols_skip: 忽略计算特征覆盖率的特征名称 .
+    :param is_sorted: 是否对特征覆盖率进行排序
     :return:
     """
 
@@ -287,109 +379,17 @@ def cal_feature_coverage(df_, col_no_cover_dict={}, col_handler_dict={}, cols_sk
     return feat_coverage_df
 
 
-def decisionTree_binning_boundary(feat_value, label_value, max_group_num):
-
-    """
-    Using decision tree to obtain the list of boundary values of optimal bin
-    :param feat_value:
-    :param label_value:
-    :return:
-    """
-
-    # store optimal binning boundary value
-    boundary = []
-    label_value = label_value.values
-    feat_value = feat_value.values.reshape(-1, 1)
-    clf = DecisionTreeClassifier(criterion='entropy',                 # Division of information entropy minimization criterion
-                                 max_leaf_nodes=max_group_num,        # Maximum number of leaf nodes
-                                 min_samples_leaf=0.05)               # The minimum proportion of leaf node samples
-
-    clf.fit(feat_value, label_value)
-
-    n_nodes = clf.tree_.node_count
-    children_left = clf.tree_.children_left
-    children_right = clf.tree_.children_right
-    threshold = clf.tree_.threshold
-
-    for i in range(n_nodes):
-        if children_left[i] != children_right[i]:
-            boundary.append(threshold[i])
-    boundary.sort()
-    min_x = feat_value.min() - 0.0001
-    max_x = feat_value.max()
-    boundary = [min_x] + boundary + [max_x]
-
-    return boundary
-
-
-def chiSquare_binning_boundary(df_, feat_name, label_name, k_part):
-
-    pos_num = df_[label_name].sum()
-    all_num = df_.shape[0]
-    expected_ratio = pos_num/all_num
-
-    # Arrange a feature value from small to large
-    df_.dropna(inplace=True)
-    feat_value_list = sorted(df_[feat_name].unique())
-
-    # cal chi2 statistic in every interval
-    chi2_list = []
-    pos_list = []
-    expected_pos_list = []
-
-    for feat_value in feat_value_list:
-
-        temp_pos_num = df_.loc[df_[feat_name] == feat_value, label_name].sum()
-        temp_all_num = df_.loc[df_[feat_name] == feat_value, label_name].count()
-
-        expected_pos_num = temp_all_num * expected_ratio
-        chi2_value = (temp_pos_num - expected_pos_num) ** 2 / expected_pos_num
-        chi2_list.append(chi2_value)
-        pos_list.append(temp_all_num)
-        expected_pos_list.append(expected_pos_num)
-
-    # Export results to dataframe
-    chi2_df = pd.DataFrame({feat_name: feat_value_list, "chi2_value": chi2_list, "pos_num": pos_list, "expected_pos_cnt": expected_pos_list})
-
-    # 根据index合并chi2_df中相邻位置的数值
-    def merge(input_df, merge_index, origin_index):
-
-        input_df.loc[merge_index, "pos_num"] = input_df.loc[merge_index, "pos_num"] + input_df.loc[origin_index, "pos_num"]
-        input_df.loc[merge_index, "expected_pos_cnt"] = input_df.loc[merge_index, "expected_pos_cnt"] + input_df.loc[origin_index, "expected_pos_cnt"]
-        input_df.loc[merge_index, "input_value"] = (input_df.loc[merge_index, "pos_num"] - input_df.loc[merge_index, "expected_pos_cnt"])**2 / input_df.loc[merge_index, "expected_pos_cnt"]
-        input_df.drop(origin_index, axis=0, inplace=True)
-        input_df.reset_index(drop=True, inplace=True)
-
-        return input_df
-
-    # 计算当前特征的卡方分箱的个数，即当前特征的所有枚举值的个数
-    group_num = len(chi2_df)
-    while group_num > k_part:
-        min_index = chi2_df[chi2_df["chi2_value"] == chi2_df["chi2_value"].min()].index[0]
-        if min_index == 0:
-            chi2_df = merge(chi2_df, min_index+1, min_index)
-        elif min_index == group_num-1:
-            chi2_df = merge(chi2_df, min_index, min_index-1)
-        else:
-            if chi2_df.loc[min_index-1, "chi2_value"] > chi2_df.loc[min_index + 1, "chi2_value"]:
-                chi2_df = merge(chi2_df, min_index+1, min_index)
-            else:
-                chi2_df = merge(chi2_df, min_index, min_index-1)
-
-        group_num = len(chi2_df)
-
-    return chi2_df[feat_name]
-
-
 if __name__ == "__main__":
 
-    # test code
-    res = pd.read_csv("/Users/bytedance/Coding/Test/data/cs-training.csv", index_col=0)
-    res.fillna(0, inplace=True)
-    print("cal_iv: ")
-    ans = cal_iv(res, "SeriousDlqin2yrs", is_sorted=True, k_part=10, bin_type="chi_square")
-    print(ans)
-    ans.to_csv("/Users/bytedance/Coding/Test/data/cs-training-iv-python-chiSquare.csv", index=False)
+    # 测试代码
+    # res = pd.read_csv("/Users/bytedance/Coding/Test/data/cs-training.csv", index_col=0)
+    # show_func()
+    # print("cal_coverage: ")
+    # print(cal_feature_coverage(res, cols_skip=["SeriousDlqin2yrs"]))
+    # res.fillna(0, inplace=True)
+    # print("cal_iv: ")
+    # ans = cal_iv(res, "SeriousDlqin2yrs", is_sorted=True, k_part=10, bin_method="same_frequency")
+    # ans.to_csv("/Users/bytedance/Coding/Test/data/cs-training-iv-python-chiSquare.csv", index=False)
 
     # y = res.iloc[:, 0]
     # X = res.iloc[:, 1:]
@@ -398,12 +398,15 @@ if __name__ == "__main__":
     # lr.fit(X_train, y_train)
     # y_train_pred = lr.predict_proba(X_train)[:, 1]
     # y_test_pred = lr.predict_proba(X_test)[:, 1]
-    # # show_func()
 
-    # print("cal_coverage: ")
-    # print(cal_feature_coverage(res))
-    # print()
-    # print("cal_auc: ", cal_auc(y_train, y_train_pred))
+    y_true_li = [1, 1, 0, 1, 0, 0]
+    y_pred_li = [0.1, 0.6, 0.3, 0.8, 0.6, 0.2]
+    y_pred2_li = [0.2, 0.3, 0.4, 0.9, 0.2, 0.1]
+
+    # show_func()
+    # print("cal_auc: ", cal_auc(y_true_li, y_pred_li))
     # print("cal_ks: cutoff={}, ks={}".format(cal_ks(y_train, y_train_pred)[0], cal_ks(y_train, y_train_pred)[1]))
-    # print("cal_psi: ", cal_psi(y_train_pred, y_test_pred))
-    # print("cal_lift: ", cal_lift(y_train, y_train_pred)[0])
+    print("cal_psi: ", type(cal_psi(y_pred_li, y_pred2_li)))
+    # print("cal_lift: ", cal_lift(y_true_li, y_pred_li))
+
+

@@ -1,22 +1,22 @@
 import pandas as pd
-
+from xgboost import XGBClassifier
 
 def get_xgboost_feature_imps(xgb_model_, importance_type, is_sorted=False, filter_zero_imps=False):
-    """Get xgboost feature importance from XGBoost Model
-    params:
-    * xgb_model_: XGBoost model instance
+    """根据XGBoost计算特征重要性
+    :param:
+    * xgb_model_: XGBoost 模型实例
     * importance_type: one of ["gain", "weight", "cover", "total_gain" or "total_cover"] 
     * is_sorted: False/True, sort feature_df_sorted_['importance'] by 'desc'.
     * filter_zero_imps: False/True, weather keep feature which importance = 0.0 feature_imps_df_
-    result:
+    :return:
     * feature_imps_df_: pd.DataFrame() with column ['feature', 'importance']
     Note:
-    * This method get feature importance as type of importance_type
+    * 该方法获取指定importance_type的数值
     """
 
     feature_map_ = xgb_model_.get_booster().get_score(importance_type=importance_type)
 
-    # find the feature which  importance value equal 0
+    # 获取特征重要度为零的特征
     if not filter_zero_imps:
         for feat in xgb_model_.get_booster().feature_names:
             if feat not in feature_map_.keys():
@@ -32,3 +32,16 @@ def get_xgboost_feature_imps(xgb_model_, importance_type, is_sorted=False, filte
         feature_imps_df_ = feature_imps_df_.sort_values(by='importance', ascending=False)
 
     return feature_imps_df_
+
+if __name__ == "__main__":
+
+    # 测试代码
+    res = pd.read_csv("/Users/bytedance/Coding/Test/data/cs-training.csv", index_col=0)
+    y = res.iloc[:, 0]
+    X = res.iloc[:, 1:]
+    xgbclf = XGBClassifier(n_estimators=50)
+    xgbclf.fit(X, y)
+    feature_imps = get_xgboost_feature_imps(xgbclf, "gain")
+    print(feature_imps)
+
+

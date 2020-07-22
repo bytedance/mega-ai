@@ -6,4 +6,5 @@ magellan_ml.egg-info/*
 
 .idea/*
 venv/*
+data/*
 
