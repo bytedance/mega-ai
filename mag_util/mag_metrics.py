@@ -26,6 +26,7 @@ def show_func():
     print("3.cal_psi")
     print("4.cal_lift")
 
+
 def cal_ks(y_true, y_pred):
     """
     Calculate KS
@@ -276,7 +277,7 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10, bin_method="same_frequenc
             boundary_list = [cur_feat_interval.min()-1] + list(cur_feat_interval)
 
         else:
-            print("The current {} method is not implemented".format(bin_type))
+            print("The current {} method is not implemented".format(bin_method))
             return
 
         for i in range(len(boundary_list)-1):
