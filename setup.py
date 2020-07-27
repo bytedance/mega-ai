@@ -14,8 +14,7 @@ AUTHOR = 'zhangliang'
 # 项目运行需要的依赖
 REQUIRES = ["numpy>=1.18.5,<1.19.1",
             "pandas>=1.0.4,<1.0.5",
-            "scipy>=1.5.0,<1.5.2",
-            "sklearn>=0.0,<0.0",
+            "sklearn>=0.0,<0.0"
             ]
 
 here = os.path.abspath(os.path.dirname(__file__))
