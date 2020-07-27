@@ -1,5 +1,5 @@
 import pandas as pd
-from xgboost import XGBClassifier
+# from xgboost import XGBClassifier
 
 def get_xgboost_feature_imps(xgb_model_, importance_type, is_sorted=False, filter_zero_imps=False):
     """根据XGBoost计算特征重要性
@@ -37,11 +37,11 @@ if __name__ == "__main__":
 
     # 测试代码
     res = pd.read_csv("/Users/bytedance/Coding/Test/data/cs-training.csv", index_col=0)
-    y = res.iloc[:, 0]
-    X = res.iloc[:, 1:]
-    xgbclf = XGBClassifier(n_estimators=50)
-    xgbclf.fit(X, y)
-    feature_imps = get_xgboost_feature_imps(xgbclf, "gain")
-    print(feature_imps)
+    # y = res.iloc[:, 0]
+    # X = res.iloc[:, 1:]
+    # xgbclf = XGBClassifier(n_estimators=50)
+    # xgbclf.fit(X, y)
+    # feature_imps = get_xgboost_feature_imps(xgbclf, "gain")
+    # print(feature_imps)
 
 

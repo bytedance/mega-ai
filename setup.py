@@ -1,9 +1,8 @@
 # coding: utf-8
+from setuptools import find_packages, setup
 
 import io
 import os
-
-from setuptools import find_packages, setup, Extension
 
 # 包元信息
 NAME = 'magellan-ai'
@@ -13,8 +12,12 @@ EMAIL = 'zhangliang.thanks@bytedance.com'
 AUTHOR = 'zhangliang'
 
 # 项目运行需要的依赖
-REQUIRES = [
-]
+REQUIRES = ["numpy>=1.18.5,<1.19.1",
+            "pandas>=1.0.4,<1.0.5",
+            "scipy>=1.5.0,<1.5.2",
+            "scipy>=1.5.0,<1.5.2",
+            "sklearn>=0.0,<0.0",
+            ]
 
 here = os.path.abspath(os.path.dirname(__file__))
 
