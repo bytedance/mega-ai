@@ -26,7 +26,7 @@ except IOError:
     long_description = DESCRIPTION
 
 setup(
-      name='byted'+NAME,
+      name='byted-'+NAME,
       version='1.0.0',
       description=DESCRIPTION,
       long_description=long_description,
