@@ -1,6 +1,6 @@
 import pandas as pd
 
-from magellan_ai.magellan_ml.mag_util import mag_metrics
+from magellan_ai.ml.mag_util import mag_metrics
 
 
 # 计算AUC
