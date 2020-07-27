@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
-setup(name='magellan-ml',
-      version='0.0.4',
+setup(name='magellan-ai',
+      version='0.0.1',
       description='Some computing tools with machine learning, python 3.6+.',
       url='http://github.com/zhangliang605/magellan_ml',
       author='zhangliang.thanks',
@@ -12,6 +12,7 @@ setup(name='magellan-ml',
       python_requires='>=3',
       install_requires = [
             'pandas',
-            'numpy'
+            'numpy',
+            'xgboost'
       ],
       zip_safe=False)
