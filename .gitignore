@@ -3,6 +3,7 @@ dist/*
 dataset/*
 build/*
 magellan_ml.egg-info/*
+magellan_ai.egg-info/*
 
 .idea/*
 venv/*
