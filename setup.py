@@ -14,19 +14,6 @@ AUTHOR = 'zhangliang'
 
 # 项目运行需要的依赖
 REQUIRES = [
-    'bytedbackgrounds>=0.0.2,<1.0.0',
-    'bytedenv>=0.3.1,<1.0.0',
-    'bytedlogger>=0.2.2,<1.0.0',
-    'bytedlogid>=0.0.2,<1.0.0',
-    'bytedmetrics>=0.6.1,<1.0.0',
-    'bytedservicediscovery~=0.11',
-    'gunicorn>=19,<21',
-    'ipaddress>=1.0.10,<2.0.0; python_version<"3.3"',
-    'psutil>=5.6.0,<=6.0.0',
-    'requests>=2.19.1,<3.0.0',
-    'six>=1.13.0,<2.0.0',
-    'thriftpy2>=0.4.7,<=1.0.0',
-    'typing>=3.6.4; python_version<"3.5"',
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))
