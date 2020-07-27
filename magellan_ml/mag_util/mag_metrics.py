@@ -383,8 +383,8 @@ def cal_feature_coverage(df_, col_no_cover_dict={}, col_handler_dict={}, cols_sk
 if __name__ == "__main__":
 
     # 测试代码
-    # res = pd.read_csv("/Users/bytedance/Coding/Test/data/cs-training.csv", index_col=0)
-    # show_func()
+    res = pd.read_csv("/Users/bytedance/Coding/Test/data/cs-training.csv", index_col=0)
+    show_func()
     # print("cal_coverage: ")
     # print(cal_feature_coverage(res, cols_skip=["SeriousDlqin2yrs"]))
     # res.fillna(0, inplace=True)
@@ -400,14 +400,15 @@ if __name__ == "__main__":
     # y_train_pred = lr.predict_proba(X_train)[:, 1]
     # y_test_pred = lr.predict_proba(X_test)[:, 1]
 
-    y_true_li = [1, 1, 0, 1, 0, 0]
-    y_pred_li = [0.1, 0.6, 0.3, 0.8, 0.6, 0.2]
-    y_pred2_li = [0.2, 0.3, 0.4, 0.9, 0.2, 0.1]
+    # y_true_li = [1, 1, 0, 1, 0, 0]
+    # y_pred_li = [0.1, 0.6, 0.3, 0.8, 0.6, 0.2]
+    # y_pred2_li = [0.2, 0.3, 0.4, 0.9, 0.2, 0.1]
 
     # show_func()
     # print("cal_auc: ", cal_auc(y_true_li, y_pred_li))
     # print("cal_ks: cutoff={}, ks={}".format(cal_ks(y_train, y_train_pred)[0], cal_ks(y_train, y_train_pred)[1]))
-    print("cal_psi: ", type(cal_psi(y_pred_li, y_pred2_li)))
+    # print("cal_psi: ", type(cal_psi(y_pred_li, y_pred2_li)))
     # print("cal_lift: ", cal_lift(y_true_li, y_pred_li))
+
 
 
