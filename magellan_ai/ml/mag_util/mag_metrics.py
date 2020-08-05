@@ -29,7 +29,7 @@ def cal_ks(y_true, y_pred):
     cutoff = thresholds[tpr_fpr_gap == ks][0]
     return cutoff, ks
 
- 
+
 def cal_auc(y_true, y_pred):
     """Calculate AUC
     params:
