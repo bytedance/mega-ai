@@ -3,6 +3,11 @@ import pandas as pd
 from sklearn.metrics import roc_curve
 from sklearn.tree import DecisionTreeClassifier
 
+"""
+    Author: huangning.honey@bytedance.com
+    Date: 2020/07/13
+    Function: 集成特征以及分类模型评估指标
+"""
 
 def show_func():
     print("feature evaluation methods")

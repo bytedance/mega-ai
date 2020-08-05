@@ -4,11 +4,12 @@ dataset/*
 build/*
 magellan_ai/__pycache__/*
 magellan_ai/dl/__pycache__/*
-magellan_ai/dnn/__pycache__/*
-magellan_ai/nlp/__pycache__/*
+magellan_ai/dl/mag_dnn/__pycache__/*
+magellan_ai/dl/mag_nlp/__pycache__/*
 magellan_ai/ml/__pycache__/*
 magellan_ai/ml/mag_util/__pycache__/*
 magellan_ai/ml/mag_case/__pycache__/*
+
 magellan_ml.egg-info/*
 magellan_ai.egg-info/*
 byted_magellan_ai.egg-info/*
