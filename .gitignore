@@ -16,5 +16,5 @@ byted_magellan_ai.egg-info/*
 
 .idea/*
 venv/*
-data/*
+../data/*
 

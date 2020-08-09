@@ -3,11 +3,13 @@ import pandas as pd
 from sklearn.metrics import roc_curve
 from sklearn.tree import DecisionTreeClassifier
 
+
 """
     Author: huangning.honey@bytedance.com
     Date: 2020/07/13
     Function: 集成特征以及分类模型评估指标
 """
+
 
 def show_func():
     print("feature evaluation methods")
@@ -19,6 +21,10 @@ def show_func():
     print("2.cal_ks")
     print("3.cal_psi")
     print("4.cal_lift")
+    print("<--------------------------->")
+    print("supervised binning methods")
+    print("1.chiSquare_binning_boundary")
+    print("2.decisionTree_binning_boundary")
 
 
 def cal_ks(y_true, y_pred):
@@ -130,7 +136,7 @@ def cal_psi(base_score, cur_score, k_part=10):
 
 def cal_iv(df_, label_name, is_sorted=True, k_part=10,
            bin_method="same_frequency"):
-    """ Calculate iv
+    """ 计算IV值
     :param df_: 样本集
     :param label_name: 标签名
     :param is_sorted: 针对iv值是否排序
@@ -138,107 +144,6 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10,
     :param bin_method: 分箱类型，目前提供了等频分箱，卡方分箱以及决策树分箱
     :return: iv_df
     """
-
-    # 用卡方分箱计算指定特征的IV
-    def chiSquare_binning_boundary(df_, feat_name, label_name, k_part):
-
-        pos_num = df_[label_name].sum()
-        all_num = df_.shape[0]
-        expected_ratio = pos_num / all_num
-
-        # Arrange a feature value from small to large
-        df_.dropna(inplace=True)
-        feat_value_list = sorted(df_[feat_name].unique())
-
-        # cal chi2 statistic in every interval
-        chi2_list = []
-        pos_list = []
-        expected_pos_list = []
-
-        for feat_value in feat_value_list:
-            temp_pos_num = df_.loc[df_[feat_name] ==
-                                   feat_value, label_name].sum()
-            temp_all_num = df_.loc[df_[feat_name] ==
-                                   feat_value, label_name].count()
-
-            expected_pos_num = temp_all_num * expected_ratio
-            chi2_value = (temp_pos_num -
-                          expected_pos_num) ** 2 / expected_pos_num
-            chi2_list.append(chi2_value)
-            pos_list.append(temp_all_num)
-            expected_pos_list.append(expected_pos_num)
-
-        # Export results to dataframe
-        chi2_df = pd.DataFrame({feat_name: feat_value_list,
-                                "chi2_value": chi2_list,
-                                "pos_num": pos_list,
-                                "expected_pos_cnt": expected_pos_list})
-
-        # 根据index合并chi2_df中相邻位置的数值
-        def merge(input_df, merge_index, origin_index):
-
-            input_df.loc[merge_index, "pos_num"] = \
-                input_df.loc[merge_index, "pos_num"] \
-                + input_df.loc[origin_index, "pos_num"]
-            input_df.loc[merge_index, "expected_pos_cnt"] = \
-                input_df.loc[merge_index, "expected_pos_cnt"] \
-                + input_df.loc[origin_index, "expected_pos_cnt"]
-            input_df.loc[merge_index, "input_value"] = \
-                (input_df.loc[merge_index, "pos_num"] -
-                 input_df.loc[merge_index, "expected_pos_cnt"]) ** 2 \
-                / input_df.loc[merge_index, "expected_pos_cnt"]
-            input_df.drop(origin_index, axis=0, inplace=True)
-            input_df.reset_index(drop=True, inplace=True)
-
-            return input_df
-
-        # 计算当前特征的卡方分箱的个数，即当前特征的所有枚举值的个数
-        group_num = len(chi2_df)
-        while group_num > k_part:
-            min_index = chi2_df[chi2_df["chi2_value"]
-                                == chi2_df["chi2_value"].min()].index[0]
-            if min_index == 0:
-                chi2_df = merge(chi2_df, min_index + 1, min_index)
-            elif min_index == group_num - 1:
-                chi2_df = merge(chi2_df, min_index, min_index - 1)
-            else:
-                if chi2_df.loc[min_index - 1, "chi2_value"] \
-                        > chi2_df.loc[min_index + 1, "chi2_value"]:
-                    chi2_df = merge(chi2_df, min_index + 1, min_index)
-                else:
-                    chi2_df = merge(chi2_df, min_index, min_index - 1)
-
-            group_num = len(chi2_df)
-
-        return chi2_df[feat_name]
-
-    # 用决策树分箱计算指定特征的IV
-    def decisionTree_binning_boundary(feat_value, label_value, max_group_num):
-
-        # store optimal binning boundary value
-        boundary = []
-        label_value = label_value.values
-        feat_value = feat_value.values.reshape(-1, 1)
-        clf = DecisionTreeClassifier(criterion='entropy',
-                                     max_leaf_nodes=max_group_num,
-                                     min_samples_leaf=0.05)
-
-        clf.fit(feat_value, label_value)
-
-        n_nodes = clf.tree_.node_count
-        children_left = clf.tree_.children_left
-        children_right = clf.tree_.children_right
-        threshold = clf.tree_.threshold
-
-        for i in range(n_nodes):
-            if children_left[i] != children_right[i]:
-                boundary.append(threshold[i])
-        boundary.sort()
-        min_x = feat_value.min() - 0.0001
-        max_x = feat_value.max()
-        boundary = [min_x] + boundary + [max_x]
-
-        return boundary
 
     def get_ivi(input_df, label_name, pos_num, neg_num):
 
@@ -284,31 +189,28 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10,
         # 决策树分箱
         elif bin_method == "decision_tree":
             boundary_list = decisionTree_binning_boundary(
-                df_[col_name], df_[label_name], k_part)
+                df_, col_name, label_name, k_part)
 
         # 卡方分箱
         elif bin_method == "chi_square":
 
-            # 如果特征的取值个数大于100，那么需要先将其等频离散化成100个值，每个取值为相应区间的右端点，然后再采用卡方分箱
+            # 如果特征的取值个数大于100，那么需要先将其等频离散化成100个值
             if len(df_[col_name].unique()) >= 100:
                 cur_feat_interval = \
-                    pd.qcut(df_[col_name], 5, duplicates="drop")
+                    pd.qcut(df_[col_name], 100, duplicates="drop")
                 df_[col_name] = cur_feat_interval
 
                 # 根据划分区间左右端点的平均数作为离散的枚举值，将连续特征转成离散特征
                 df_[col_name] = df_[col_name].apply(
                     lambda x: float((x.left + x.right) / 2))
 
-            cur_feat_interval = chiSquare_binning_boundary(
+            boundary_list = chiSquare_binning_boundary(
                 df_, col_name, label_name, k_part)
             df_[col_name] = df_[col_name].astype("float64")
-            boundary_list = \
-                [cur_feat_interval.min() - 1] + list(cur_feat_interval)
 
         else:
-            print("The current {} method is not "
-                  "implemented".format(bin_method))
-            return
+            raise Exception("The current {} method is not "
+                            "implemented".format(bin_method))
 
         for i in range(len(boundary_list) - 1):
             cur_group_df = df_[(df_[col_name] > boundary_list[i])
@@ -421,6 +323,133 @@ def cal_feature_coverage(df_, col_no_cover_dict={},
     return feat_coverage_df
 
 
+# 卡方分箱
+def chiSquare_binning_boundary(df_, feat_name, label_name, k_part):
+    """
+    :param df_: 输入数据框
+    :param feat_name: 特征名称
+    :param label_name: 标签名称
+    :param k_part: 最大分箱个数
+    :return: boundary: 分箱的边界列表
+    """
+
+    all_num = df_.shape[0]
+    pos_num = df_[label_name].sum()
+    expected_ratio = pos_num / all_num
+    feat_value_list = sorted(df_[feat_name].unique())
+
+    # 计算每个区间的chi2统计量
+    chi2_list = []
+    pos_list = []
+    expected_pos_list = []
+
+    for feat_value in feat_value_list:
+        temp_pos_num = df_.loc[df_[feat_name] ==
+                               feat_value, label_name].sum()
+        temp_all_num = df_.loc[df_[feat_name] ==
+                               feat_value, label_name].count()
+
+        expected_pos_num = temp_all_num * expected_ratio
+        chi2_value = (temp_pos_num -
+                      expected_pos_num) ** 2 / expected_pos_num
+        chi2_list.append(chi2_value)
+        pos_list.append(temp_all_num)
+        expected_pos_list.append(expected_pos_num)
+
+    # 将结果导出到数据框
+    chi2_df = pd.DataFrame({feat_name: feat_value_list,
+                            "chi2_value": chi2_list,
+                            "pos_num": pos_list,
+                            "expected_pos_cnt": expected_pos_list})
+
+    # 根据index合并chi2_df中相邻位置的数值
+    def merge(input_df, merge_index, origin_index):
+
+        input_df.loc[merge_index, "pos_num"] = \
+            input_df.loc[merge_index, "pos_num"] \
+            + input_df.loc[origin_index, "pos_num"]
+        input_df.loc[merge_index, "expected_pos_cnt"] = \
+            input_df.loc[merge_index, "expected_pos_cnt"] \
+            + input_df.loc[origin_index, "expected_pos_cnt"]
+        input_df.loc[merge_index, "input_value"] = \
+            (input_df.loc[merge_index, "pos_num"] -
+             input_df.loc[merge_index, "expected_pos_cnt"]) ** 2 \
+            / input_df.loc[merge_index, "expected_pos_cnt"]
+        input_df.drop(origin_index, axis=0, inplace=True)
+        input_df.reset_index(drop=True, inplace=True)
+
+        return input_df
+
+    # 计算当前特征的卡方分箱的个数，即当前特征的所有枚举值的个数
+    group_num = len(chi2_df)
+    while group_num > k_part:
+        min_index = chi2_df[chi2_df["chi2_value"]
+                            == chi2_df["chi2_value"].min()].index[0]
+        if min_index == 0:
+            chi2_df = merge(chi2_df, min_index + 1, min_index)
+        elif min_index == group_num - 1:
+            chi2_df = merge(chi2_df, min_index, min_index - 1)
+        else:
+            if chi2_df.loc[min_index - 1, "chi2_value"] \
+                    > chi2_df.loc[min_index + 1, "chi2_value"]:
+                chi2_df = merge(chi2_df, min_index + 1, min_index)
+            else:
+                chi2_df = merge(chi2_df, min_index, min_index - 1)
+
+        group_num = len(chi2_df)
+
+    min_x = chi2_df[feat_name].min() - 0.0001
+    boundary = [min_x] + list(chi2_df[feat_name])
+    return boundary
+
+
+# 决策树分箱
+def decisionTree_binning_boundary(df_, feat_name, label_name, k_part):
+    """
+    :param df_: 输入数据框
+    :param feat_name: 特征名称
+    :param label_name: 标签名称
+    :param k_part: 最大分箱个数
+    :return: boundary: 分箱的边界列表
+    """
+
+    # 存储分箱的边界值
+    boundary = []
+    label_value = df_[label_name].values
+    feat_value = df_[feat_name].values.reshape(-1, 1)
+
+    clf = DecisionTreeClassifier(criterion='entropy',
+                                 max_leaf_nodes=k_part,
+                                 min_samples_leaf=0.05)
+    clf.fit(feat_value, label_value)
+
+    n_nodes = clf.tree_.node_count
+    children_left = clf.tree_.children_left
+    children_right = clf.tree_.children_right
+    threshold = clf.tree_.threshold
+
+    for index in range(n_nodes):
+        if children_left[index] != children_right[index]:
+            boundary.append(threshold[index])
+    boundary.sort()
+    min_x = feat_value.min() - 0.0001
+    max_x = feat_value.max()
+    boundary = [min_x] + boundary + [max_x]
+
+    return boundary
+
+
 if __name__ == "__main__":
     # 测试代码
     show_func()
+    data_df = pd.read_csv("/Users/bytedance/ByteCode"
+                          "/magellan_ai/data/cs-training.csv", index_col=0)
+    data_df.fillna(0, inplace=True)
+
+    res = chiSquare_binning_boundary(
+        data_df, "NumberOfTime30-59DaysPastDueNotWorse",
+        "SeriousDlqin2yrs", 10)
+    res2 = decisionTree_binning_boundary(
+        data_df, "NumberOfTime30-59DaysPastDueNotWorse",
+        "SeriousDlqin2yrs", 10)
+    print(res)
