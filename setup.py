@@ -12,7 +12,7 @@ EMAIL = 'zhangliang.thanks@bytedance.com'
 AUTHOR = 'zhangliang'
 
 # 项目运行需要的依赖
-REQUIRES = ["numpy>=1.18.5,<1.19.1",
+REQUIRES = ["numpy>=1.16.0,<1.19.1",
             "pandas>=1.0.4,<1.0.5",
             "scikit-learn>=0.21.3,<0.23.1"
             ]
