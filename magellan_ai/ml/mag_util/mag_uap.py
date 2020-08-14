@@ -5,8 +5,7 @@ from matplotlib import pyplot as plt
 import math
 
 EPS = 1e-7
-
-"""
+'''
 def feature_coverage_in_diff_people(
         df_,
         group_col,
@@ -15,6 +14,27 @@ def feature_coverage_in_diff_people(
         col_handler_dict={},
         cols_skip=[],
         is_sorted=True):
+    \"""
+    Parameters:
+        df_: DataFrame
+            输入文件
+        group_col:
+            表示人群的标签所在的列
+        group_dict : dict
+            group 标签的别名，不出现在此 dict 的标签，别名等于自身
+        col_no_cover_dict: dict
+            自定义特征指定数据类型的非覆盖值. 默认值:
+                * int64: [0, -1]
+                * float64: [0.0, -1.0]
+                * object: []
+                * bool: []
+        col_handler_dict: dict
+            指定特征数据类型的覆盖率计算方法.
+        cols_skip:
+            忽略计算特征覆盖率的特征名称 .
+        is_sorted: bool
+            是否对特征覆盖率进行排序
+    \"""
     # 默认非覆盖标签
     if not col_no_cover_dict:
         col_no_cover_dict = {'int64': [-1], 'float64': [-1.0],
@@ -48,9 +68,11 @@ def feature_coverage_in_diff_people(
     df2.columns[1] += "_%s" % idx[1]
     res_df = pd.merge(df1, df2, how="inner", on="feature")
     return res_df
+'''
 """
 # 1. 分析两人群在单个枚举类特征上差异。特征的例子：性别，职业，最喜欢的 app
 # 2. 特征取值为 2 种时，进行卡方检验，特征大于 2 种时，计算 psi 值。其它统计方法后续可以添加。
+"""
 
 
 def single_enum_feat_eval_diff_people(
@@ -310,11 +332,18 @@ def single_continuity_feat_eval_diff_people(
             raise Exception("人群种类数不为 2")
     except Exception as err:
         print(err)
-    # 当 feature 非
+
+    # 当 feature 为 obj 时，抛出异常
+    try:
+        if str(df['feature'].dtype) == "object":
+            raise Exception("fearute 为 object")
+    except Exception as err:
+        print(err)
+
     # 计算两个人群包均值与方差，并生成 DataFrame
     groups = df.groupby('group')
-    vec0 = groups.get_group(0)
-    vec1 = groups.get_group(1)
+    vec0 = groups.get_group(0)['feature']
+    vec1 = groups.get_group(1)['feature']
     features = ['mean', 'std']
     info0 = [vec0.mean(), vec0.std()]  # 计算第一组均值、方差
     info1 = [vec1.mean(), vec1.std()]  # 计算第二组均值、方差
@@ -348,14 +377,13 @@ if __name__ == '__main__':
             0: "not own car", 1: "own car"}, draw_pics=True)
     print(dic['DataFrame'])
     print("chi2=%s, result=%s" % (dic["chi2"], dic["result"]))
-    """
     df = pd.read_csv("./t3.csv", header=0)
     dic = single_enum_feat_eval_diff_people(
         df['t3_4'], df['career'], group_dict={
             0: "ins", 1: "water"}, draw_pics=True)
     print(dic['DataFrame'])
     print("psi=%s, result=%s" % (dic["psi"], dic["result"]))
-
+    """
     df = pd.read_csv('./prob.csv', header=0)
     dic = single_continuity_feat_eval_diff_people(
         df["prob4"], df["proba_parenting"], group_dict={
