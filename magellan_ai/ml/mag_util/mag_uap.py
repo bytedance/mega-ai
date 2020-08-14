@@ -2,10 +2,23 @@
 import pandas as pd
 from scipy import stats
 from matplotlib import pyplot as plt
+from magellan_ai.ml.mag_util import mag_metrics
 import math
 
 EPS = 1e-7
-'''
+
+
+def show_func():
+    # 可视化函数
+    print("-----------------------------------------")
+    print("|analyse methods                        |")
+    print("-----------------------------------------")
+    print("|feature_coverage_in_diff_people        |")
+    print("|single_enum_feat_eval_diff_people      |")
+    print("|single_continuity_feat_eval_diff_people|")
+    print("-----------------------------------------")
+
+
 def feature_coverage_in_diff_people(
         df_,
         group_col,
@@ -14,7 +27,8 @@ def feature_coverage_in_diff_people(
         col_handler_dict={},
         cols_skip=[],
         is_sorted=True):
-    \"""
+    """
+    对于两人群根据样本特征列计算特征覆盖率
     Parameters:
         df_: DataFrame
             输入文件
@@ -34,41 +48,50 @@ def feature_coverage_in_diff_people(
             忽略计算特征覆盖率的特征名称 .
         is_sorted: bool
             是否对特征覆盖率进行排序
-    \"""
+    """
     # 默认非覆盖标签
     if not col_no_cover_dict:
         col_no_cover_dict = {'int64': [-1], 'float64': [-1.0],
                              'str': ["-1", "unknown"],
                              'object': ["-1", "unknown"], 'bool': []}
-
+    # 取出两人群个特征信息
     groups = df.groupby(group_col)
-    dfs = [], idx = []
+    group_dfs, indexs = [], []
     for index, group_df in groups:
         if index in col_no_cover_dict[str(df_[group_col].dtype)]:
             continue
-        dfs.append(group_df)
-        idx.append(index)
-
-    if len(dfs) != 2:
-        return None
-
-    df1 = mag_metrics.cal_iv(
-        dfs[0],
+        indexs.append(index)
+        group_dfs.append(group_df)
+    # 人群种类数不为 2，抛出异常
+    try:
+        if len(group_dfs) != 2:
+            raise Exception("人群种类数不为 2")
+    except Exception as err:
+        print(err)
+    # 调用 metrics 库，生成两人群标签覆盖率 DataFrame
+    df1 = mag_metrics.cal_feature_coverage(
+        group_dfs[0],
         col_no_cover_dict,
         col_handler_dict,
         cols_skip,
-        is_sorted=True)
-    df2 = mag_metrics.cal_iv(
-        dfs[0],
+        is_sorted)
+    df2 = mag_metrics.cal_feature_coverage(
+        group_dfs[1],
         col_no_cover_dict,
         col_handler_dict,
         cols_skip,
-        is_sorted=True)
-    df1.columns[1] += "_%s" % idx[0]
-    df2.columns[1] += "_%s" % idx[1]
+        is_sorted)
+
+    # 修改两个 coverage 列信息
+    df1.columns = ['feature', 'coverage_%s' % indexs[0], 'feat_type']
+    df2.columns = ['feature', 'coverage_%s' % indexs[1], 'feat_type']
+    del df1['feat_type']
+    # 合并 DataFrame
     res_df = pd.merge(df1, df2, how="inner", on="feature")
+
     return res_df
-'''
+
+
 """
 # 1. 分析两人群在单个枚举类特征上差异。特征的例子：性别，职业，最喜欢的 app
 # 2. 特征取值为 2 种时，进行卡方检验，特征大于 2 种时，计算 psi 值。其它统计方法后续可以添加。
@@ -271,7 +294,12 @@ def single_enum_feat_eval_diff_people(
 
         return report
 
-# 1. 分析两人群中，一个较为连续的特征差异（例如：概率类标签）
+
+"""
+1. 从均值分析两人群中，较为连续的特征差异（例如：概率类标签）
+2. 绘制两人群 hist
+3. 目前支持 t-test / Welch ，效果不佳，后续检验方法需要更新。
+"""
 
 
 def single_continuity_feat_eval_diff_people(
@@ -371,6 +399,12 @@ if __name__ == '__main__':
     # TEST CODE
     """
     df = pd.read_csv("./car.csv", header=0)
+    print(feature_coverage_in_diff_people(
+        df,"car4",group_dict={0:"ins", 1:"water"}))
+    """
+
+    """
+    df = pd.read_csv("./car.csv", header=0)
     dic = single_enum_feat_eval_diff_people(
         df['car4'], df['own_car'], group_dict={
             0: "ins", 1: "water"}, feature_dict={
@@ -384,6 +418,7 @@ if __name__ == '__main__':
     print(dic['DataFrame'])
     print("psi=%s, result=%s" % (dic["psi"], dic["result"]))
     """
+
     df = pd.read_csv('./prob.csv', header=0)
     dic = single_continuity_feat_eval_diff_people(
         df["prob4"], df["proba_parenting"], group_dict={
