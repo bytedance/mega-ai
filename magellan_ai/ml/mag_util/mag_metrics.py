@@ -1,14 +1,7 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.tree import DecisionTreeClassifier
-
-
-"""
-    Author: huangning.honey@bytedance.com
-    Date: 2020/07/13
-    Function: 集成特征以及分类模型评估指标
-"""
 
 
 def show_func():
@@ -48,18 +41,18 @@ def cal_auc(y_true, y_pred):
     * y_pred: 模型预测概率 [0,1]
     """
 
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
-    rank = [label_value for prob_value, label_value in
-            sorted(zip(y_pred, y_true), key=lambda x: x[0])]
-    rank_list = [index + 1 for index, label_value in
-                 enumerate(rank) if label_value == 1]
-    pos_num, neg_num = \
-        len(y_true[y_true == 1]), len(y_true[y_true == 0])
-    auc = (sum(rank_list) -
-           (pos_num * (pos_num + 1)) / 2) / (pos_num * neg_num)
+    # y_true = np.array(y_true)
+    # y_pred = np.array(y_pred)
+    # rank = [label_value for prob_value, label_value in
+    #         sorted(zip(y_pred, y_true), key=lambda x: x[0])]
+    # rank_list = [index + 1 for index, label_value in
+    #              enumerate(rank) if label_value == 1]
+    # pos_num, neg_num = \
+    #     len(y_true[y_true == 1]), len(y_true[y_true == 0])
+    # auc = (sum(rank_list) -
+    #        (pos_num * (pos_num + 1)) / 2) / (pos_num * neg_num)
 
-    return auc
+    return roc_auc_score(y_true, y_pred)
 
 
 def cal_lift(y_true, y_pred, k_part=10):
