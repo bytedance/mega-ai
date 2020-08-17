@@ -18,7 +18,9 @@ byted_magellan_ai.egg-info/*
 venv/*
 ../data/*
 
+.DS_Store
 magellan_ai/.DS_Store
 magellan_ai/ml/.DS_Store
 magellan_ai/ml/mag_util/.DS_Store
+
 magellan_ai/dl/.DS_Store
