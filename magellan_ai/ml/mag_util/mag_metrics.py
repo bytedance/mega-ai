@@ -106,7 +106,7 @@ def cal_psi(base_score, cur_score, k_part=10):
         thres_list = [min(thres_list) - 0.001] + thres_list
     else:
         intervals = sorted(np.unique(
-            pd.qcut(base_score, k_part, duplicates="drop")), reverse=True)
+            pd.qcut(base_score, k_part, duplicates="drop")), reverse=False)
         thres_list = [intervals[0].left] + \
                      [interval.right for interval in intervals]
 
@@ -435,14 +435,20 @@ def decisionTree_binning_boundary(df_, feat_name, label_name, k_part):
 if __name__ == "__main__":
     # 测试代码
     show_func()
-    data_df = pd.read_csv("/Users/bytedance/ByteCode"
-                          "/magellan_ai/data/cs-training.csv", index_col=0)
-    data_df.fillna(0, inplace=True)
+    # data_df = pd.read_csv("/Users/bytedance/ByteCode"
+    #                       "/magellan_ai/data/cs-training.csv", index_col=0)
+    # data_df.fillna(0, inplace=True)
+    #
+    # res = chiSquare_binning_boundary(
+    #     data_df, "NumberOfTime30-59DaysPastDueNotWorse",
+    #     "SeriousDlqin2yrs", 10)
+    # res2 = decisionTree_binning_boundary(
+    #     data_df, "NumberOfTime30-59DaysPastDueNotWorse",
+    #     "SeriousDlqin2yrs", 10)
+    # print(res)
 
-    res = chiSquare_binning_boundary(
-        data_df, "NumberOfTime30-59DaysPastDueNotWorse",
-        "SeriousDlqin2yrs", 10)
-    res2 = decisionTree_binning_boundary(
-        data_df, "NumberOfTime30-59DaysPastDueNotWorse",
-        "SeriousDlqin2yrs", 10)
+    df_t1 = pd.read_csv('/Users/bytedance/ByteCode/magellan_ai/data/t1.csv')
+    df_t2 = pd.read_csv('/Users/bytedance/ByteCode/magellan_ai/data/t2.csv')
+    res = cal_psi(df_t1.loc[:, 'multiloan_online_model_v8_score'],
+                  df_t2.loc[:, 'multiloan_online_model_v8_score'], k_part=10)
     print(res)
