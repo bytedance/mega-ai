@@ -447,8 +447,8 @@ if __name__ == "__main__":
     #     "SeriousDlqin2yrs", 10)
     # print(res)
 
-    df_t1 = pd.read_csv('/Users/bytedance/ByteCode/magellan_ai/data/t1.csv')
-    df_t2 = pd.read_csv('/Users/bytedance/ByteCode/magellan_ai/data/t2.csv')
-    res = cal_psi(df_t1.loc[:, 'multiloan_online_model_v8_score'],
-                  df_t2.loc[:, 'multiloan_online_model_v8_score'], k_part=10)
-    print(res)
+    # df_t1 = pd.read_csv('/Users/bytedance/ByteCode/magellan_ai/data/t1.csv')
+    # df_t2 = pd.read_csv('/Users/bytedance/ByteCode/magellan_ai/data/t2.csv')
+    # res = cal_psi(df_t1.loc[:, 'multiloan_online_model_v8_score'],
+    #               df_t2.loc[:, 'multiloan_online_model_v8_score'], k_part=10)
+    # print(res)
