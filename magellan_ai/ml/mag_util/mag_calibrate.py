@@ -1,15 +1,18 @@
 import pandas as pd
 import numpy as np
 from sklearn.isotonic import IsotonicRegression
-from sklearn.linear_model import LogisticRegression
-from magellan_ai.ml.mag_util.mag_metrics import chiSquare_binning_boundary, \
+from ml.mag_util.mag_metrics import chiSquare_binning_boundary, \
     decisionTree_binning_boundary
 
 
-def show_calibrate_func():
-    print("1.isotonic_calibrate")
-    print("2.gaussian_calibrate")
-    print("3.score_calibrate")
+def show_func():
+    print("+--------------------------+")
+    print("|calibrate method          |")
+    print("+--------------------------+")
+    print("|1.isotonic_calibrate      |")
+    print("|2.gaussian_calibrate      |")
+    print("|3.score_calibrate         |")
+    print("+--------------------------+")
 
 
 def isotonic_calibrate(input_df, proba_name, label_name,
@@ -21,7 +24,7 @@ def isotonic_calibrate(input_df, proba_name, label_name,
     :param label_name: 数据框中的标签名称
     :param is_poly: 是否针对分箱结果进行多项式拟合，用于和保序回归结果进行比较
     :param fit_num: 多项式拟合次数
-    :param bin_num: 分箱个数
+    :param bin_num: 最大分箱个数
     :param bin_method: 分箱方法
     {'same_frequency','decision_tree','chi_square'}，默认是等频分箱
     :param bin_value_method: 箱值计算方法："mean"
@@ -45,7 +48,7 @@ def isotonic_calibrate(input_df, proba_name, label_name,
     # 决策树分箱
     elif bin_method == "decision_tree":
         boundary_list = decisionTree_binning_boundary(
-            input_df[proba_name], input_df[label_name], bin_num)
+            input_df[proba_name], input_df[label_name], bin_num, k_part=bin_num)
 
     # 卡方分箱
     elif bin_method == "chi_square":
@@ -181,31 +184,3 @@ def score_calibrate(input_df, proba_name, min_score=300, max_score=850):
                                ) * (x - min_value) / (max_value - min_value))
 
     return input_df
-
-
-if __name__ == "__main__":
-    data_df = pd.read_csv("/Users/bytedance/ByteCode/magellan_ai"
-                          "/data/cs-training.csv", index_col=0)
-    data_df.fillna(0, inplace=True)
-    X = data_df.iloc[:, 1:]
-    y = data_df["SeriousDlqin2yrs"]
-    lr = LogisticRegression(penalty="l2", random_state=99)
-    lr.fit(X, y)
-    y_proba = lr.predict_proba(X)[:, 1]
-    test_df = pd.DataFrame({"label": y, "proba": y_proba})
-
-    # # 测试show_calibrate_func
-    # show_calibrate_func()
-
-    # 测试isotonic_calibrate
-    res1 = isotonic_calibrate(
-        test_df, proba_name="proba", label_name="label",
-        is_poly=True, bin_method="chi_square", bin_value_method="mean")
-    res1.sort_values(by="proba", inplace=True)
-
-    # # 测试score_calibrate
-    # res2 = score_calibrate(test_df, proba_name="proba")
-    # print(res2)
-    #
-    # res3 = gaussian_calibrate(test_df, "proba")
-    # print(res3)
