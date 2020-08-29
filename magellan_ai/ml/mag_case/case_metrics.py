@@ -1,6 +1,6 @@
 import pandas as pd
 
-from ml.mag_util import mag_uap, mag_metrics, mag_calibrate
+from magellan_ai.ml.mag_util import mag_uap, mag_metrics, mag_calibrate
 from sklearn.linear_model import LogisticRegression
 
 

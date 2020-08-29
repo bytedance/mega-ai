@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.isotonic import IsotonicRegression
-from ml.mag_util.mag_metrics import chiSquare_binning_boundary, \
+from magellan_ai.ml.mag_util.mag_metrics import chiSquare_binning_boundary, \
     decisionTree_binning_boundary
 
 

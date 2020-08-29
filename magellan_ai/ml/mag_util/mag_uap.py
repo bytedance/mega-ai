@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from matplotlib import pyplot as plt
-from ml.mag_util import mag_metrics
+from magellan_ai.ml.mag_util import mag_metrics
 
 
 EPS = 1e-7
