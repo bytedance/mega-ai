@@ -179,7 +179,7 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
             # 如果特征枚举数量小于默认的分组个数，则直接按照枚举值进行分组
             if len(input_df[col_name].unique()) < k_part:
                 boundary_list = [input_df[col_name].min() -
-                                 0.001] + [sorted(input_df[col_name].unique())]
+                                 0.001] + sorted(input_df[col_name].unique())
             else:
                 cur_feat_interval = sorted(
                     pd.qcut(input_df[col_name], k_part,
@@ -226,7 +226,6 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
 
         # 计算缺失值部分的ivi和woei
         if input_na_df.shape[0] != 0:
-
             cur_group_df = input_na_df
             ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
             cur_feat_woe["NaN"] = woei
