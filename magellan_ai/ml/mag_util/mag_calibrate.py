@@ -48,7 +48,8 @@ def isotonic_calibrate(input_df, proba_name, label_name,
     # 决策树分箱
     elif bin_method == "decision_tree":
         boundary_list = decisionTree_binning_boundary(
-            input_df[proba_name], input_df[label_name], bin_num, k_part=bin_num)
+            input_df[proba_name], input_df[label_name],
+            bin_num, k_part=bin_num)
 
     # 卡方分箱
     elif bin_method == "chi_square":
