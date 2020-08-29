@@ -5,8 +5,8 @@
 * `magellan_ml`
   * `mag_util`
     * `mag_metrics`: 提供了计算各种指标的工具方法，包括auc,ks,iv,psi等指标的计算。
-    * `mag_xgb` *: 提供了基于XGBoost模型计算特征重要度的方法。
-    * `mag_uap` *: 提供了两人群差异分析方法。
+    * `mag_xgb` : 提供了基于XGBoost模型计算特征重要度的方法。
+    * `mag_uap` : 提供了两人群差异分析方法。
     * `mag_calibrate`: 提供了模型分数校准方法，包括保序回归校准，高斯校准以及得分校准。
   * `mag_nlp`: 提供了NLP相关的各种工具方法，包括分词，实体识别等功能。
   * `mag_case`: 提供各种教程。
