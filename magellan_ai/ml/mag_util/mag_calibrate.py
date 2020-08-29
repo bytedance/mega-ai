@@ -2,14 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
-from mag_metrics import chiSquare_binning_boundary, \
+from magellan_ai.ml.mag_util.mag_metrics import chiSquare_binning_boundary, \
     decisionTree_binning_boundary
-
-"""
-    Author: huangning.honey@bytedance.com
-    Date: 2020/08/04
-    Function: 实现不同的模型分数校准方法
-"""
 
 
 def show_calibrate_func():

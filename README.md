@@ -4,7 +4,10 @@
 目前提供以下模块：
 * `magellan_ml`
   * `mag_util`
-    * `metrics`: 提供了计算各种指标的工具方法，包括auc,ks,iv,psi等指标的计算。
+    * `mag_metrics`: 提供了计算各种指标的工具方法，包括auc,ks,iv,psi等指标的计算。
+    * `mag_xgb` *: 提供了基于XGBoost模型计算特征重要度的方法。
+    * `mag_uap` *: 提供了两人群差异分析方法。
+    * `mag_calibrate`: 提供了模型分数校准方法，包括保序回归校准，高斯校准以及得分校准。
   * `mag_nlp`: 提供了NLP相关的各种工具方法，包括分词，实体识别等功能。
   * `mag_case`: 提供各种教程。
   
@@ -17,7 +20,7 @@ pip install magellan-ai -i https://pypi.Python.org/simple/
 ```
 
 # 本地安装
-如果要给该项目贡献代码，可以在本地调试好后测试，本地安装方法
+如果要给该项目贡献代码，在本地调试好后测试，本地安装方法
 
 ```python
 $ git clone git@code.byted.org:cfalg/magellan_ai.git
@@ -26,10 +29,10 @@ $ python install .
 ```
 
 # 使用教程
-以`magllan_ai.mag_util.mag_metrics`模块为例，安装完成之后，可以使用以下方法导入使用
+以`magllan_ai.ml.mag_util.mag_metrics`模块为例，安装完成之后，可以使用以下方法导入使用
 
 ```
-from magllan_ai.mag_util import mag_metrics
+from magllan_ai.ml.mag_util import mag_metrics
 
 mag_metrics.show_func()
 mag_metrics.cal_auc()

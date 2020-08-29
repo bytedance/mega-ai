@@ -5,19 +5,21 @@ from sklearn.tree import DecisionTreeClassifier
 
 
 def show_func():
-    print("feature evaluation methods")
-    print("1.cal_iv")
-    print("2.cal_feature_coverage")
-    print("<--------------------------->")
-    print("model evaluation methods")
-    print("1.cal_auc")
-    print("2.cal_ks")
-    print("3.cal_psi")
-    print("4.cal_lift")
-    print("<--------------------------->")
-    print("supervised binning methods")
-    print("1.chiSquare_binning_boundary")
-    print("2.decisionTree_binning_boundary")
+    print("+-------------------------------+")
+    print("|feature evaluation methods     |")
+    print("|1.cal_iv                       |")
+    print("|2.cal_feature_coverage         |")
+    print("+-------------------------------+")
+    print("|model evaluation methods       |")
+    print("|1.cal_auc                      |")
+    print("|2.cal_ks                       |")
+    print("|3.cal_psi                      |")
+    print("|4.cal_lift                     |")
+    print("+-------------------------------+")
+    print("|supervised binning methods     |")
+    print("|1.chiSquare_binning_boundary   |")
+    print("|2.decisionTree_binning_boundary|")
+    print("+-------------------------------+")
 
 
 def cal_ks(y_true, y_pred):
@@ -127,10 +129,10 @@ def cal_psi(base_score, cur_score, k_part=10):
     return psi
 
 
-def cal_iv(df_, label_name, is_sorted=True, k_part=10,
+def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
            bin_method="same_frequency"):
     """ 计算IV值
-    :param df_: 样本集
+    :param input_df: 样本集
     :param label_name: 标签名
     :param is_sorted: 针对iv值是否排序
     :param k_part: 最大的分箱个数
@@ -149,69 +151,85 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10,
         return ivi, woei
 
     # 提取特征列表
-    df_.fillna(0, inplace=True)
-    feat_list = list(df_.columns)
+    feat_list = list(input_df.columns)
     feat_list.remove(label_name)
 
-    # 计算每个特征的iv值
+    # 计算每个特征的woe和iv值
     iv_dict = {}
-    pos_num, neg_num = sum(df_[label_name] == 1), sum(df_[label_name] == 0)
+    pos_num, neg_num = sum(input_df[label_name] == 1), sum(
+        input_df[label_name] == 0)
     for col_name in feat_list:
 
         iv_total = 0
         cur_feat_woe = {}
 
         # 将类别特征变成数值特征
-        if df_[col_name].dtypes in (np.dtype('bool'), np.dtype('object')):
+        if input_df[col_name].dtypes in (np.dtype('bool'), np.dtype('object')):
             label_encoder = {label: idx for idx, label
-                             in enumerate(np.unique(df_[col_name]))}
-            df_[col_name] = df_[col_name].map(label_encoder)
+                             in enumerate(np.unique(input_df[col_name]))}
+            input_df[col_name] = input_df[col_name].map(label_encoder)
+
+        # 将当前特征的非空值和空值部分剥离
+        input_na_df = input_df[input_df[col_name].isna()]
+        input_df = input_df[~input_df[col_name].isna()]
 
         # 等频分箱
         if bin_method == "same_frequency":
 
-            # 如果特征取值个数小于默认的分组个数，那么直接按照枚举值进行分组
-            if len(df_[col_name].unique()) < k_part:
-                boundary_list = [df_[col_name].min() -
-                                 0.001] + [df_[col_name].unique().sort()]
+            # 如果特征枚举数量小于默认的分组个数，则直接按照枚举值进行分组
+            if len(input_df[col_name].unique()) < k_part:
+                boundary_list = [input_df[col_name].min() -
+                                 0.001] + [sorted(input_df[col_name].unique())]
             else:
                 cur_feat_interval = sorted(
-                    pd.qcut(df_[col_name], k_part, duplicates="drop").unique())
+                    pd.qcut(input_df[col_name], k_part,
+                            duplicates="drop").unique())
                 boundary_list = [cur_feat_interval[0].left] + \
                                 [value.right for value in cur_feat_interval]
         # 决策树分箱
         elif bin_method == "decision_tree":
+
             boundary_list = decisionTree_binning_boundary(
-                df_, col_name, label_name, k_part)
+                input_df, col_name, label_name, k_part)
 
         # 卡方分箱
         elif bin_method == "chi_square":
 
             # 如果特征的取值个数大于100，那么需要先将其等频离散化成100个值
-            if len(df_[col_name].unique()) >= 100:
+            if len(input_df[col_name].unique()) >= 100:
                 cur_feat_interval = \
-                    pd.qcut(df_[col_name], 100, duplicates="drop")
-                df_[col_name] = cur_feat_interval
+                    pd.qcut(input_df[col_name], 100, duplicates="drop")
+                input_df[col_name] = cur_feat_interval
 
                 # 根据划分区间左右端点的平均数作为离散的枚举值，将连续特征转成离散特征
-                df_[col_name] = df_[col_name].apply(
+                input_df[col_name] = input_df[col_name].apply(
                     lambda x: float((x.left + x.right) / 2))
 
             boundary_list = chiSquare_binning_boundary(
-                df_, col_name, label_name, k_part)
-            df_[col_name] = df_[col_name].astype("float64")
+                input_df, col_name, label_name, k_part)
+            input_df[col_name] = input_df[col_name].astype("float64")
 
         else:
             raise Exception("The current {} method is not "
                             "implemented".format(bin_method))
 
         for i in range(len(boundary_list) - 1):
-            cur_group_df = df_[(df_[col_name] > boundary_list[i])
-                               & (df_[col_name] <= boundary_list[i + 1])]
+            cur_group_df = input_df[(input_df[col_name] > boundary_list[i])
+                                    & (input_df[col_name]
+                                       <= boundary_list[i + 1])]
             interval = "(" + str(boundary_list[i]) + ", " \
                        + str(boundary_list[i + 1]) + "]"
+
             ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
             cur_feat_woe[interval] = woei
+            iv_total += ivi
+
+        # 计算缺失值部分的ivi和woei
+        if input_na_df.shape[0] != 0:
+
+            cur_group_df = input_na_df
+            ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
+            cur_feat_woe["NaN"] = woei
             iv_total += ivi
 
         iv_dict[col_name] = [cur_feat_woe, iv_total]
@@ -225,11 +243,11 @@ def cal_iv(df_, label_name, is_sorted=True, k_part=10,
     return iv_df
 
 
-def cal_feature_coverage(df_, col_no_cover_dict={},
+def cal_feature_coverage(input_df, col_no_cover_dict={},
                          col_handler_dict={}, cols_skip=[], is_sorted=True):
     """analyze feature coverage for pandas dataframe
 
-    :param df_: 输入数据
+    :param input_df: 输入数据
     :param col_no_cover_dict: 自定义特征指定数据类型的非覆盖值. 默认值:
             * int64: [0, -1]
             * float64: [0.0, -1.0]
@@ -267,46 +285,46 @@ def cal_feature_coverage(df_, col_no_cover_dict={},
 
         return row_cnt + df_col.isna().sum()
 
-    row_num = df_.shape[0]
+    row_num = input_df.shape[0]
     feat_coverage_dict = {}
-    for col_name in df_.columns:
+    for col_name in input_df.columns:
         if col_name in cols_skip:
             continue
 
         col_handler = col_handler_int64
-        if df_[col_name].dtype == np.dtype('bool'):
+        if input_df[col_name].dtype == np.dtype('bool'):
             if 'bool' in col_handler_dict:
                 col_handler = col_handler_dict['bool']
             else:
                 col_handler = col_handler_bool
 
-        if df_[col_name].dtype == np.dtype('object'):
+        if input_df[col_name].dtype == np.dtype('object'):
             if 'object' in col_handler_dict:
                 col_handler = col_handler_dict['object']
             else:
                 col_handler = col_handler_object
 
-        if df_[col_name].dtype == np.dtype('int64'):
+        if input_df[col_name].dtype == np.dtype('int64'):
             if 'int64' in col_handler_dict:
                 col_handler = col_handler_dict['int64']
             else:
                 col_handler = col_handler_int64
 
-        if df_[col_name].dtype == np.dtype('float64'):
+        if input_df[col_name].dtype == np.dtype('float64'):
             if 'float64' in col_handler_dict:
                 col_handler = col_handler_dict['float64']
             else:
                 col_handler = col_handler_float64
 
-        no_cover_count = col_handler(df_.loc[:, col_name])
+        no_cover_count = col_handler(input_df.loc[:, col_name])
         coverage = (row_num - no_cover_count) * 1.0 / (row_num + 1e-6)
 
-        feat_coverage_dict[col_name] = [coverage, df_[col_name].dtype]
+        feat_coverage_dict[col_name] = [coverage, input_df[col_name].dtype]
 
     feat_coverage_df = pd.DataFrame.from_dict(
         feat_coverage_dict, orient="index",
         columns=["coverage", "feat_type"], )
-    feat_coverage_df = feat_coverage_df\
+    feat_coverage_df = feat_coverage_df \
         .reset_index().rename(columns={"index": "feature"})
 
     if is_sorted:
@@ -317,19 +335,19 @@ def cal_feature_coverage(df_, col_no_cover_dict={},
 
 
 # 卡方分箱
-def chiSquare_binning_boundary(df_, feat_name, label_name, k_part):
+def chiSquare_binning_boundary(input_df, feat_name, label_name, k_part):
     """
-    :param df_: 输入数据框
+    :param input_df: 输入数据框
     :param feat_name: 特征名称
     :param label_name: 标签名称
     :param k_part: 最大分箱个数
     :return: boundary: 分箱的边界列表
     """
 
-    all_num = df_.shape[0]
-    pos_num = df_[label_name].sum()
+    all_num = input_df.shape[0]
+    pos_num = input_df[label_name].sum()
     expected_ratio = pos_num / all_num
-    feat_value_list = sorted(df_[feat_name].unique())
+    feat_value_list = sorted(input_df[feat_name].unique())
 
     # 计算每个区间的chi2统计量
     chi2_list = []
@@ -337,10 +355,10 @@ def chiSquare_binning_boundary(df_, feat_name, label_name, k_part):
     expected_pos_list = []
 
     for feat_value in feat_value_list:
-        temp_pos_num = df_.loc[df_[feat_name] ==
-                               feat_value, label_name].sum()
-        temp_all_num = df_.loc[df_[feat_name] ==
-                               feat_value, label_name].count()
+        temp_pos_num = input_df.loc[input_df[feat_name] ==
+                                    feat_value, label_name].sum()
+        temp_all_num = input_df.loc[input_df[feat_name] ==
+                                    feat_value, label_name].count()
 
         expected_pos_num = temp_all_num * expected_ratio
         chi2_value = (temp_pos_num -
@@ -397,9 +415,9 @@ def chiSquare_binning_boundary(df_, feat_name, label_name, k_part):
 
 
 # 决策树分箱
-def decisionTree_binning_boundary(df_, feat_name, label_name, k_part):
+def decisionTree_binning_boundary(input_df, feat_name, label_name, k_part):
     """
-    :param df_: 输入数据框
+    :param input_df: 输入数据框
     :param feat_name: 特征名称
     :param label_name: 标签名称
     :param k_part: 最大分箱个数
@@ -408,8 +426,8 @@ def decisionTree_binning_boundary(df_, feat_name, label_name, k_part):
 
     # 存储分箱的边界值
     boundary = []
-    label_value = df_[label_name].values
-    feat_value = df_[feat_name].values.reshape(-1, 1)
+    label_value = input_df[label_name].values
+    feat_value = input_df[feat_name].values.reshape(-1, 1)
 
     clf = DecisionTreeClassifier(criterion='entropy',
                                  max_leaf_nodes=k_part,
@@ -430,25 +448,3 @@ def decisionTree_binning_boundary(df_, feat_name, label_name, k_part):
     boundary = [min_x] + boundary + [max_x]
 
     return boundary
-
-
-if __name__ == "__main__":
-    # 测试代码
-    show_func()
-    # data_df = pd.read_csv("/Users/bytedance/ByteCode"
-    #                       "/magellan_ai/data/cs-training.csv", index_col=0)
-    # data_df.fillna(0, inplace=True)
-    #
-    # res = chiSquare_binning_boundary(
-    #     data_df, "NumberOfTime30-59DaysPastDueNotWorse",
-    #     "SeriousDlqin2yrs", 10)
-    # res2 = decisionTree_binning_boundary(
-    #     data_df, "NumberOfTime30-59DaysPastDueNotWorse",
-    #     "SeriousDlqin2yrs", 10)
-    # print(res)
-
-    # df_t1 = pd.read_csv('/Users/bytedance/ByteCode/magellan_ai/data/t1.csv')
-    # df_t2 = pd.read_csv('/Users/bytedance/ByteCode/magellan_ai/data/t2.csv')
-    # res = cal_psi(df_t1.loc[:, 'multiloan_online_model_v8_score'],
-    #               df_t2.loc[:, 'multiloan_online_model_v8_score'], k_part=10)
-    # print(res)

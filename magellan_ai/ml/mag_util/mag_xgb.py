@@ -1,9 +1,6 @@
 import pandas as pd
 
 
-# from xgboost import XGBClassifier
-
-
 def get_xgboost_feature_imps(xgb_model_, importance_type,
                              is_sorted=False, filter_zero_imps=False):
     """根据XGBoost计算特征重要性
@@ -41,8 +38,3 @@ def get_xgboost_feature_imps(xgb_model_, importance_type,
             by='importance', ascending=False)
 
     return feature_imps_df_
-
-
-if __name__ == "__main__":
-    # 测试代码
-    print("---")

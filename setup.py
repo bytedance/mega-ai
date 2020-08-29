@@ -7,7 +7,7 @@ import os
 # 包元信息
 NAME = 'magellan-ai'
 DESCRIPTION = 'Some computing tools with machine learning, python 3.6+.'
-URL = 'https://code.byted.org/scm/python-boilerplate'  # TODO: 修改为项目实际仓库 URL
+URL = 'https://code.byted.org/cfalg/magellan_ai'  # TODO: 修改为项目实际仓库 URL
 EMAIL = 'zhangliang.thanks@bytedance.com'
 AUTHOR = 'zhangliang'
 
@@ -27,7 +27,7 @@ except IOError:
 
 setup(
       name='byted-'+NAME,
-      version='1.0.2',
+      version='1.0.3',
       description=DESCRIPTION,
       long_description=long_description,
       long_description_content_type="text/markdown",

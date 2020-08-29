@@ -1,22 +1,23 @@
 # coding=utf-8
+import numpy as np
 import pandas as pd
 from scipy import stats
 from matplotlib import pyplot as plt
-from magellan_ai.ml.mag_util import mag_metrics
-import math
+from magellan_ai.magellan_ai.ml.mag_util import mag_metrics
+
 
 EPS = 1e-7
 
 
 def show_func():
     # 可视化函数
-    print("-----------------------------------------")
+    print("+---------------------------------------+")
     print("|analyse methods                        |")
-    print("-----------------------------------------")
+    print("+---------------------------------------+")
     print("|feature_coverage_in_diff_people        |")
     print("|single_enum_feat_eval_diff_people      |")
     print("|single_continuity_feat_eval_diff_people|")
-    print("-----------------------------------------")
+    print("+---------------------------------------+")
 
 
 def feature_coverage_in_diff_people(
@@ -55,7 +56,7 @@ def feature_coverage_in_diff_people(
                              'str': ["-1", "unknown"],
                              'object': ["-1", "unknown"], 'bool': []}
     # 取出两人群个特征信息
-    groups = df.groupby(group_col)
+    groups = df_.groupby(group_col)
     group_dfs, indexs = [], []
     for index, group_df in groups:
         if index in col_no_cover_dict[str(df_[group_col].dtype)]:
@@ -224,7 +225,7 @@ def single_enum_feat_eval_diff_people(
         def calpsi(a, e):
             e = max(e, 0.0005)
             a = max(a, 0.0005)
-            return (a - e) * math.log(a / e)
+            return (a - e) * np.log(a / e)
 
         portion0, portion1 = ratio.values()  # 两个人群各种特征出现频率
         group0, group1 = group_dict.values()  # 各 group 标签别名
@@ -393,35 +394,3 @@ def single_continuity_feat_eval_diff_people(
     report = {"DataFrame": res_df, "p-value": L.pvalue}
     report["result"] = "有较大差异" if L.pvalue < 0.05 else "无明显差异"
     return report
-
-
-if __name__ == '__main__':
-    # TEST CODE
-    """
-    df = pd.read_csv("./car.csv", header=0)
-    print(feature_coverage_in_diff_people(
-        df,"car4",group_dict={0:"ins", 1:"water"}))
-    """
-
-    """
-    df = pd.read_csv("./car.csv", header=0)
-    dic = single_enum_feat_eval_diff_people(
-        df['car4'], df['own_car'], group_dict={
-            0: "ins", 1: "water"}, feature_dict={
-            0: "not own car", 1: "own car"}, draw_pics=True)
-    print(dic['DataFrame'])
-    print("chi2=%s, result=%s" % (dic["chi2"], dic["result"]))
-    df = pd.read_csv("./t3.csv", header=0)
-    dic = single_enum_feat_eval_diff_people(
-        df['t3_4'], df['career'], group_dict={
-            0: "ins", 1: "water"}, draw_pics=True)
-    print(dic['DataFrame'])
-    print("psi=%s, result=%s" % (dic["psi"], dic["result"]))
-    """
-
-    df = pd.read_csv('./prob.csv', header=0)
-    dic = single_continuity_feat_eval_diff_people(
-        df["prob4"], df["proba_parenting"], group_dict={
-            0: "ins", 1: "water"}, draw_pics=True)
-    print(dic['DataFrame'])
-    print("p-value=%s, result=%s" % (dic["p-value"], dic["result"]))
