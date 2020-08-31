@@ -1,3 +1,7 @@
+# coding: utf-8
+
+from __future__ import absolute_import, division, print_function, unicode_literals
+import six.moves as sm
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_curve, roc_auc_score
@@ -80,7 +84,7 @@ def cal_lift(y_true, y_pred, k_part=10):
     y_neg_pred = y_pred[y_true == 0]
     y_num = y_true.shape[0]
     pos_rate = y_pos_pred.shape[0] / y_num
-    for i in range(len(thres_list)):
+    for i in sm.range(len(thres_list)):
         TP, FP = len(y_pos_pred[y_pos_pred > thres_list[i]]), \
                  len(y_neg_pred[y_neg_pred > thres_list[i]])
         if TP + FP == 0:
@@ -117,7 +121,7 @@ def cal_psi(base_score, cur_score, k_part=10):
     psi = 0
 
     # 计算每组的psi值
-    for i in range(len(thres_list[:-1])):
+    for i in sm.range(len(thres_list[:-1])):
         base_rate = sum((np.array(base_score) > thres_list[i])
                         & (np.array(base_score) <=
                            thres_list[i + 1])) / base_score_len
@@ -214,7 +218,7 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
             raise Exception("The current {} method is not "
                             "implemented".format(bin_method))
 
-        for i in range(len(boundary_list) - 1):
+        for i in sm.range(len(boundary_list) - 1):
             cur_group_df = input_df[(input_df[col_name] > boundary_list[i])
                                     & (input_df[col_name]
                                        <= boundary_list[i + 1])]
@@ -445,7 +449,7 @@ def decisionTree_binning_boundary(input_df, feat_name, label_name, k_part):
     children_right = clf.tree_.children_right
     threshold = clf.tree_.threshold
 
-    for index in range(n_nodes):
+    for index in sm.range(n_nodes):
         if children_left[index] != children_right[index]:
             boundary.append(threshold[index])
     boundary.sort()

@@ -1,4 +1,7 @@
-# coding=utf-8
+# coding: utf-8
+
+from __future__ import absolute_import, division, print_function, unicode_literals
+import six.moves as sm
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -258,7 +261,7 @@ def single_enum_feat_eval_diff_people(
         # psi 计算
         psi_li = []  # psi List
         psi_sum = 0
-        for i in range(len(res_df)):
+        for i in sm.range(len(res_df)):
             psi_value = calpsi(res_df[group0][i], res_df[group1][i])
             psi_sum += psi_value
             psi_li.append(psi_value)
@@ -266,7 +269,7 @@ def single_enum_feat_eval_diff_people(
         # 生成显示标签在人群中占比的 DataFrame，并按差异大小，对特征标签排序
         res_df["psi"] = psi_li
         res_df = res_df.sort_values(by=['psi'], ascending=False)
-        res_df.index = [i for i in range(res_df.shape[0])]
+        res_df.index = [i for i in sm.range(res_df.shape[0])]
 
         # 绘制两人群饼图
         if draw_pics:

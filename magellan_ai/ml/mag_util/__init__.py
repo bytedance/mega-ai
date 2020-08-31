@@ -1,2 +1,4 @@
-__all__ = ["mag_metrics", "mag_datacheck",
-           "mag_xgb", "mag_hdfs", "mag_calibrate"]
+# coding: utf-8
+
+__all__ = ["mag_calibrate",  "mag_datacheck", "mag_hdfs",  "mag_metrics",
+           "mag_uap", "mag_xgb"]

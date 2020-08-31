@@ -1,4 +1,5 @@
 # coding: utf-8
+
 from setuptools import find_packages, setup
 
 import io
@@ -14,7 +15,8 @@ AUTHOR = 'zhangliang'
 # 项目运行需要的依赖
 REQUIRES = ["numpy>=1.16.0,<1.19.1",
             "pandas>=1.0.4,<1.0.5",
-            "scikit-learn>=0.21.3,<0.23.1"
+            "scikit-learn>=0.21.3,<0.23.1",
+            "six>=1.11.0,<2.0.0"
             ]
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -27,7 +29,7 @@ except IOError:
 
 setup(
       name='byted-'+NAME,
-      version='1.0.6',
+      version='1.1.0',
       description=DESCRIPTION,
       long_description=long_description,
       long_description_content_type="text/markdown",
@@ -41,6 +43,6 @@ setup(
       ],
       packages=find_packages(),
       install_requires=REQUIRES,
-      python_requires='>=3.6',
+      python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
       include_package_data=True
 )

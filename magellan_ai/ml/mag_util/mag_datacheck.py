@@ -1,3 +1,8 @@
+# coding: utf-8
+
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+
 def is_number(s):
     """check input 's' si numberic type or not"""
     try:

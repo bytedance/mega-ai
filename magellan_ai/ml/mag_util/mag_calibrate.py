@@ -1,3 +1,8 @@
+# coding: utf-8
+
+from __future__ import absolute_import, division, print_function, unicode_literals
+import six.moves as sm
+
 import pandas as pd
 import numpy as np
 from sklearn.isotonic import IsotonicRegression
@@ -74,7 +79,7 @@ def isotonic_calibrate(input_df, proba_name, label_name,
 
     # 二维坐标点，第1维是桶值，第2维是真实的通过率
     coordinate_li = []
-    for i in range(len(boundary_list) - 1):
+    for i in sm.range(len(boundary_list) - 1):
 
         group_df = input_df[(input_df[proba_name] > boundary_list[i])
                             & (input_df[proba_name] <= boundary_list[i + 1])]
@@ -130,7 +135,7 @@ def isotonic_calibrate(input_df, proba_name, label_name,
                             "threshold value of 9 or is non "
                             "negative. Please re-enter...")
         elif fit_num > 0:
-            for i in range(fit_num):
+            for i in sm.range(fit_num):
                 z = np.polyfit(data_df["bin_value"],
                                data_df["pos_ratio"], i + 1)
                 p = np.poly1d(z)
