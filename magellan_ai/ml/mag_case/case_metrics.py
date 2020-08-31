@@ -1,12 +1,13 @@
 # coding: utf-8  # 用来指定文件编码为utf-8
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, division, \
+    print_function, unicode_literals
 import pandas as pd
 from magellan_ai.ml.mag_util import mag_uap, mag_metrics, mag_calibrate
 from sklearn.linear_model import LogisticRegression
 
 
-# 计算AUC
+# 计算auc
 def case_metrics_auc(path, prob_col, label_col):
     df = pd.read_csv(path)
     auc = mag_metrics.cal_auc(df.loc[:, prob_col], df.loc[:, label_col])
@@ -28,10 +29,10 @@ if __name__ == "__main__":
     print(mag_metrics.cal_iv(data_df, "SeriousDlqin2yrs"))
     print(mag_metrics.cal_feature_coverage(data_df))
 
-    # # 模型训练
-    # X = data_df.iloc[:, 1:]
-    # y = data_df["SeriousDlqin2yrs"]
-    # lr = LogisticRegression(penalty="l2", random_state=99)
+    # 模型训练
+    X = data_df.iloc[:, 1:]
+    y = data_df["SeriousDlqin2yrs"]
+    lr = LogisticRegression(penalty="l2", random_state=99)
     # X.fillna(0, inplace=True)
     # lr.fit(X, y)
     # y_proba = lr.predict_proba(X)[:, 1]
