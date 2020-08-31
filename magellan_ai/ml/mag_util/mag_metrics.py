@@ -158,7 +158,8 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
     iv_dict = {}
     pos_num, neg_num = sum(input_df[label_name] == 1), sum(
         input_df[label_name] == 0)
-    for col_name in feat_list:
+    feat_len = len(feat_list)
+    for index, col_name in enumerate(feat_list):
 
         iv_total = 0
         cur_feat_woe = {}
@@ -232,7 +233,9 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
             iv_total += ivi
 
         iv_dict[col_name] = [cur_feat_woe, iv_total]
+        print("\r特征IV计算已完成{:.2%}".format((index+1)/feat_len), end="")
 
+    print()
     iv_df = pd.DataFrame.from_dict(
         iv_dict, orient="index", columns=["woe_value", "iv_value"])
     iv_df = iv_df.reset_index().rename(columns={"index": "feature"})
@@ -254,7 +257,7 @@ def cal_feature_coverage(input_df, col_no_cover_dict={},
             * bool: []
     :param col_handler_dict: 指定特征数据类型的覆盖率计算方法.
     :param cols_skip: 忽略计算特征覆盖率的特征名称 .
-    :param is_sorted: 是否对特征覆盖率进行排序
+    :param is_sorted: 是否对特征覆盖率进行倒叙排序
     :return:
     """
 
@@ -286,7 +289,9 @@ def cal_feature_coverage(input_df, col_no_cover_dict={},
 
     row_num = input_df.shape[0]
     feat_coverage_dict = {}
-    for col_name in input_df.columns:
+    cols_len = len(input_df.columns)
+
+    for index, col_name in enumerate(input_df.columns):
         if col_name in cols_skip:
             continue
 
@@ -319,7 +324,9 @@ def cal_feature_coverage(input_df, col_no_cover_dict={},
         coverage = (row_num - no_cover_count) * 1.0 / (row_num + 1e-6)
 
         feat_coverage_dict[col_name] = [coverage, input_df[col_name].dtype]
+        print("\r特征覆盖率计算已完成{:.2%}".format((index+1)/cols_len), end="")
 
+    print()
     feat_coverage_df = pd.DataFrame.from_dict(
         feat_coverage_dict, orient="index",
         columns=["coverage", "feat_type"], )
