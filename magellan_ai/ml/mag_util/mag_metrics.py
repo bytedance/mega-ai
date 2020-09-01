@@ -28,12 +28,63 @@ def show_func():
 
 
 def cal_ks(y_true, y_pred):
+    """Calculate KS
+
+    Parameters
+    ----------
+    y_true : list, ndarray, Series or DataFrame
+            真实标签, 取值范围是{0, 1}.
+
+    y_pred : list, ndarray, Series or DataFrame
+            预测概率, 取值范围是[0, 1].
+
+    Returns
+    --------
+    cutoff : float
+        KS值对应的阈值.
+
+    ks : float
+         模型的KS值.
+
+    Examples
+    ----------
+    >>> y_true_li = [1, 1, 0, 1, 0, 0]
+    >>> y_pred_li = [0.1, 0.6, 0.3, 0.8, 0.6, 0.2]
+    >>> cutoff, ks = mag_metrics.cal_ks(y_true_li, y_pred_li)
+    >>> cutoff
+    0.2
+    >>> ks
+    0.33333333333333337
+
+    >>> y_true_arr = np.array([1, 1, 0, 1, 0, 0])
+    >>> y_pred_arr = np.array([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
+    >>> cutoff, ks = mag_metrics.cal_ks(y_true_arr, y_pred_arr)
+    >>> cutoff
+    0.2
+    >>> ks
+    0.33333333333333337
+
+    >>> y_true_ser = pd.Series([1, 1, 0, 1, 0, 0])
+    >>> y_pred_ser = pd.Series([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
+    >>> cutoff, ks = mag_metrics.cal_ks(y_true_ser, y_pred_ser)
+    >>> cutoff
+    0.2
+    >>> ks
+    0.33333333333333337
+
+    >>> y_true_df = pd.DataFrame([1, 1, 0, 1, 0, 0])
+    >>> y_pred_df = pd.DataFrame([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
+    >>> cutoff, ks = mag_metrics.cal_ks(y_true_df, y_pred_df)
+    >>> cutoff
+    0.2
+    >>> ks
+    0.33333333333333337
+
+    Notes
+    -----
+    真实标签和预测概率的长度要保持一致
     """
-    Calculate KS
-    :param y_true: True label value
-    :param y_pred: Prediction probability
-    :return: cutoff, ks
-    """
+
     fpr, tpr, thresholds = roc_curve(y_true, y_pred)
     tpr_fpr_gap = abs(fpr - tpr)
     ks = max(tpr_fpr_gap)
@@ -43,9 +94,49 @@ def cal_ks(y_true, y_pred):
 
 def cal_auc(y_true, y_pred):
     """Calculate AUC
-    params:
-    * y_true: 真实标签值 {0,1}
-    * y_pred: 模型预测概率 [0,1]
+
+    Parameters
+    ----------
+    y_true : list, ndarray, Series or DataFrame
+             真实标签值 {0,1}.
+
+    y_pred : list, ndarray, Series or DataFrame
+             预测概率, 取值范围是[0, 1].
+
+    Returns
+    --------
+    auc: float
+         模型的AUC值
+
+    Examples
+    ----------
+    >>> y_true_li = [1, 1, 0, 1, 0, 0]
+    >>> y_pred_li = [0.1, 0.6, 0.3, 0.8, 0.6, 0.2]
+    >>> auc = mag_metrics.cal_auc(y_true_li, y_pred_li)
+    >>> auc
+    0.5555555555555556
+
+    >>> y_true_arr = np.array([1, 1, 0, 1, 0, 0])
+    >>> y_pred_arr = np.array([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
+    >>> auc = mag_metrics.cal_auc(y_true_arr, y_pred_arr)
+    >>> auc
+    0.5555555555555556
+
+    >>> y_true_ser = pd.Series([1, 1, 0, 1, 0, 0])
+    >>> y_pred_ser = pd.Series([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
+    >>> auc = mag_metrics.cal_auc(y_true_ser, y_pred_ser)
+    >>> auc
+    0.5555555555555556
+
+    >>> y_true_df = pd.DataFrame([1, 1, 0, 1, 0, 0])
+    >>> y_pred_df = pd.DataFrame([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
+    >>> auc = mag_metrics.cal_auc(y_true_df, y_pred_df)
+    >>> auc
+    0.5555555555555556
+
+    Notes
+    -----
+    真实标签和预测概率的长度要保持一致
     """
 
     # y_true = np.array(y_true)
@@ -64,10 +155,70 @@ def cal_auc(y_true, y_pred):
 
 def cal_lift(y_true, y_pred, k_part=10):
     """Calculate lift
-    :param y_true: 标签值
-    :param y_pred: 预测概率
-    :param k_part: 最大分箱个数
-    :return: lift, depth, thresholds
+
+    Parameters
+    ----------
+    y_true : list, ndarray, Series or DataFrame
+             真实标签值 {0,1}.
+
+    y_pred : list, ndarray, Series or DataFrame
+             预测概率, 取值范围是[0, 1].
+
+    k_part : int, default=10
+             最大分箱个数.
+
+    Returns
+    ----------
+    lift: list
+          不同阈值下的lift.
+
+    depth: list
+         不同阈值下的depth.
+
+    thresholds: list
+         阈值列表.
+
+    Examples
+    ----------
+    >>> y_true_li = [1, 1, 0, 1, 0, 0]
+    >>> y_pred_li = [0.1, 0.6, 0.3, 0.8, 0.6, 0.2]
+    >>> lift, depth, thresholds = mag_metrics.cal_lift(y_true_li, y_pred_li)
+    >>> lift
+    [1, 2.0, 1.3333333333333333, 1.0, 0.8]
+    >>> depth
+    [0, 0.16666666666666666, 0.5, 0.6666666666666666, 0.8333333333333334]
+    >>> thresholds
+    [0.8, 0.6, 0.3, 0.2, 0.1]
+
+    >>> y_true_arr = np.array([1, 1, 0, 1, 0, 0])
+    >>> y_pred_arr = np.array([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
+    >>> lift, depth, thresholds = mag_metrics.cal_lift(y_true_arr, y_pred_arr)
+    >>> lift
+    [1, 2.0, 1.3333333333333333, 1.0, 0.8]
+    >>> depth
+    [0, 0.16666666666666666, 0.5, 0.6666666666666666, 0.8333333333333334]
+    >>> thresholds
+    [0.8, 0.6, 0.3, 0.2, 0.1]
+
+    >>> y_true_ser = pd.Series([1, 1, 0, 1, 0, 0])
+    >>> y_pred_ser = pd.Series([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
+    >>> lift, depth, thresholds = mag_metrics.cal_lift(y_true_ser, y_pred_ser)
+    >>> lift
+    [1, 2.0, 1.3333333333333333, 1.0, 0.8]
+    >>> depth
+    [0, 0.16666666666666666, 0.5, 0.6666666666666666, 0.8333333333333334]
+    >>> thresholds
+    [0.8, 0.6, 0.3, 0.2, 0.1]
+
+    >>> y_true_df = pd.DataFrame([1, 1, 0, 1, 0, 0])
+    >>> y_pred_df = pd.DataFrame([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
+    >>> lift, depth, thresholds = mag_metrics.cal_lift(y_true_df, y_pred_df)
+    >>> lift
+    [1, 2.0, 1.3333333333333333, 1.0, 0.8]
+    >>> depth
+    [0, 0.16666666666666666, 0.5, 0.6666666666666666, 0.8333333333333334]
+    >>> thresholds
+    [0.8, 0.6, 0.3, 0.2, 0.1]
     """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
@@ -101,10 +252,47 @@ def cal_lift(y_true, y_pred, k_part=10):
 
 def cal_psi(base_score, cur_score, k_part=10):
     """Calculate PSI
-    :param base_score: 训练集上的预测概率
-    :param cur_score: 测试集上的预测概率
-    :param k_part: 最大分箱个数
-    :return: PSI
+
+    Parameters
+    ----------
+    base_score : list, ndarray, Series or DataFrame
+                 训练集上的预测概率.
+
+    cur_score: list, ndarray, Series or DataFrame
+               测试集上的预测概率.
+
+    k_part : int, default=10
+             最大分箱个数.
+
+    Returns
+    ----------
+    psi : float
+          模型的PSI值.
+
+    Examples
+    ----------
+    >>> y_train_pred_li = [0.1, 0.6, 0.3, 0.8, 0.6, 0.2]
+    >>> y_test_pred_li = [0.2, 0.3, 0.4, 0.9, 0.2, 0.1]
+    >>> psi = mag_metrics.cal_psi(y_train_pred_li, y_test_pred_li)
+    >>> psi
+    1.4674292331341745
+
+    >>> y_train_pred_arr = np.array([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
+    >>> y_test_pred_arr = np.array([0.2, 0.3, 0.4, 0.9, 0.2, 0.1])
+    >>> psi = mag_metrics.cal_psi(y_train_pred_arr, y_test_pred_arr)
+    >>> psi
+    1.4674292331341745
+
+    >>> y_test_pred_ser = pd.Series([0.2, 0.3, 0.4, 0.9, 0.2, 0.1])
+    >>> psi = mag_metrics.cal_psi(y_train_pred_ser, y_test_pred_ser)
+    >>> psi
+    1.4674292331341745
+
+    >>> y_train_pred_df = pd.DataFrame([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
+    >>> y_test_pred_df = pd.DataFrame([0.2, 0.3, 0.4, 0.9, 0.2, 0.1])
+    >>> psi = mag_metrics.cal_psi(y_train_pred_df, y_test_pred_df)
+    >>> psi
+    array([1.46742923])
     """
 
     # 根据k_part获取分箱间隔值列表
@@ -136,13 +324,63 @@ def cal_psi(base_score, cur_score, k_part=10):
 
 def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
            bin_method="same_frequency"):
-    """ 计算IV值
-    :param input_df: 样本集
-    :param label_name: 标签名
-    :param is_sorted: 针对iv值是否排序
-    :param k_part: 最大的分箱个数
-    :param bin_method: 分箱类型，目前提供了等频分箱，卡方分箱以及决策树分箱
-    :return: iv_df
+    """Calculate IV
+
+    Parameters
+    ----------
+    input_df : DataFrame
+               样本集.
+
+    label_name : str
+                 标签名.
+
+    k_part : int, default=10
+             最大分箱个数.
+
+    is_sorted : bool, default=True
+                是否针对IV值降序排列.
+
+    k_part : int, default=10
+             最大分箱个数.
+
+    bin_method : {'same_frequency', 'decision_tree', 'chi_square'}, \
+                 default='same_frequency'
+                 分箱方法，目前提供的分箱方法有等频分箱，决策树分箱以及卡方分箱.
+
+    Returns
+    ----------
+    iv_df : DataFrame
+            特征的IV以及每组的WOE值.
+
+    Examples
+    ----------
+    >>> data_df
+    SeriousDlqin2yrs  ...  NumberOfDependents
+    1                      1  ...                 2.0
+    2                      0  ...                 1.0
+    3                      0  ...                 0.0
+    4                      0  ...                 0.0
+    5                      0  ...                 0.0
+    ...                  ...  ...                 ...
+    149996                 0  ...                 0.0
+    149997                 0  ...                 2.0
+    149998                 0  ...                 0.0
+    149999                 0  ...                 0.0
+    150000                 0  ...                 0.0
+    >>> res = mag_metrics.cal_iv(data_df, "SeriousDlqin2yrs", is_sorted=True,
+    ... k_part=10, bin_type="same_frequency")
+    >>> print(res)
+                  feature                         woe_value     iv_value
+    0  RevolvingUtiliz...  {'(-0.001, 0.00297]': -1.019..., 1.113033e+00
+    1  NumberOfTime30-...  {'(-0.001, 1.0]': -0.2578258..., 4.718310e-01
+    2                 age  {'(-0.001, 33.0]': 0.5812925..., 2.591578e-01
+    3           DebtRatio  {'(-0.001, 0.0309]': -0.2313..., 7.369553e-02
+    4  NumberOfOpenCre...  {'(-0.001, 3.0]': 0.51482573..., 6.689181e-02
+    5       MonthlyIncome  {'(-0.001, 2358.0]': -0.0049..., 5.821497e-02
+    6  NumberOfDependents  {'(-0.001, 1.0]': -0.0882658..., 2.496452e-02
+    7  NumberRealEstat...  {'(-0.001, 1.0]': 0.02428457..., 1.209142e-02
+    8  NumberOfTimes90...  {'(-0.001, 98.0]': 9.2596487..., 8.574110e-17
+    9  NumberOfTime60-...  {'(-0.001, 98.0]': 9.2596487..., 8.574110e-17
     """
 
     def get_ivi(input_df, label_name, pos_num, neg_num):
@@ -252,18 +490,59 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
 
 def cal_feature_coverage(input_df, col_no_cover_dict={},
                          col_handler_dict={}, cols_skip=[], is_sorted=True):
-    """analyze feature coverage for pandas dataframe
+    """Analyze feature coverage for pandas dataframe
 
-    :param input_df: 输入数据
-    :param col_no_cover_dict: 自定义特征指定数据类型的非覆盖值. 默认值:
-            * int64: [0, -1]
-            * float64: [0.0, -1.0]
-            * object: []
-            * bool: []
-    :param col_handler_dict: 指定特征数据类型的覆盖率计算方法.
-    :param cols_skip: 忽略计算特征覆盖率的特征名称 .
-    :param is_sorted: 是否对特征覆盖率进行倒叙排序
-    :return:
+    Parameters
+    ----------
+    input_df : DataFrame
+               样本集.
+
+    col_no_cover_dict : dict
+                        自定义特征指定数据类型的非覆盖值.
+
+    col_handler_dict : dict
+                       特征指定数据类型的覆盖率计算方法.
+
+    cols_skip : list
+                忽略计算特征覆盖率的特征名称.
+
+    is_sorted : bool
+                是否对特征覆盖率进行倒序排列.
+
+    Returns
+    ----------
+    feat_coverage_df : DataFrame
+                       特征覆盖率.
+
+    Examples
+    ----------
+    >>> data_df
+            SeriousDlqin2yrs  ...  NumberOfDependents
+    1                      1  ...                 2.0
+    2                      0  ...                 1.0
+    3                      0  ...                 0.0
+    4                      0  ...                 0.0
+    5                      0  ...                 0.0
+    ...                  ...  ...                 ...
+    149996                 0  ...                 0.0
+    149997                 0  ...                 2.0
+    149998                 0  ...                 0.0
+    149999                 0  ...                 0.0
+    150000                 0  ...                 0.0
+    >>> ans = mag_metrics.cal_feature_coverage(data_df,
+    ... cols_skip=["SeriousDlqin2yrs"])
+    >>> print(ans)
+                                    feature  coverage feat_type
+    0                                   age  0.999993     int64
+    1       NumberOfOpenCreditLinesAndLoans  0.987413     int64
+    2                             DebtRatio  0.972580   float64
+    3  RevolvingUtilizationOfUnsecuredLines  0.927480   float64
+    4                         MonthlyIncome  0.790900   float64
+    5          NumberRealEstateLoansOrLines  0.625413     int64
+    6                    NumberOfDependents  0.394493   float64
+    7  NumberOfTime30-59DaysPastDueNotWorse  0.159880     int64
+    8               NumberOfTimes90DaysLate  0.055587     int64
+    9  NumberOfTime60-89DaysPastDueNotWorse  0.050693     int64
     """
 
     if not col_no_cover_dict:
@@ -347,12 +626,43 @@ def cal_feature_coverage(input_df, col_no_cover_dict={},
 
 # 卡方分箱
 def chiSquare_binning_boundary(input_df, feat_name, label_name, k_part):
-    """
-    :param input_df: 输入数据框
-    :param feat_name: 特征名称
-    :param label_name: 标签名称
-    :param k_part: 最大分箱个数
-    :return: boundary: 分箱的边界列表
+    """Calculate binning threshold list by chisqure binning method
+
+    Parameters
+    ----------
+    input_df : DataFrame
+               样本集.
+    feat_name : str
+                特征名称.
+    label_name : str
+                 标签名称.
+    k_part : int
+             最大分箱个数.
+
+    Returns
+    ---------
+    boundary : list
+               分箱的边界列表.
+
+    Examples
+    ----------
+    >>> data_df
+            SeriousDlqin2yrs  ...  NumberOfDependents
+    1                      1  ...                 2.0
+    2                      0  ...                 1.0
+    3                      0  ...                 0.0
+    4                      0  ...                 0.0
+    5                      0  ...                 0.0
+    ...                  ...  ...                 ...
+    149996                 0  ...                 0.0
+    149997                 0  ...                 2.0
+    149998                 0  ...                 0.0
+    149999                 0  ...                 0.0
+    150000                 0  ...                 0.0
+    >>> res = mag_metrics.chiSquare_binning_boundary(data_df,
+    ... "NumberOfTime30-59DaysPastDueNotWorse", "SeriousDlqin2yrs", 10)
+    >>> res
+    [-0.0001, 0, 1, 2, 3, 4, 5, 6, 7, 96, 98]
     """
 
     all_num = input_df.shape[0]
@@ -427,12 +737,43 @@ def chiSquare_binning_boundary(input_df, feat_name, label_name, k_part):
 
 # 决策树分箱
 def decisionTree_binning_boundary(input_df, feat_name, label_name, k_part):
-    """
-    :param input_df: 输入数据框
-    :param feat_name: 特征名称
-    :param label_name: 标签名称
-    :param k_part: 最大分箱个数
-    :return: boundary: 分箱的边界列表
+    """Calculate binning threshold list by decisionTree binning method
+
+    Parameters
+    ----------
+    input_df : DataFrame
+               样本集.
+    feat_name : str
+                特征名称.
+    label_name : str
+                 标签名称.
+    k_part : int
+             最大分箱个数.
+
+    Returns
+    ---------
+    boundary : list
+               分箱的边界列表.
+
+    Examples
+    ---------
+    >>> data_df
+            SeriousDlqin2yrs  ...  NumberOfDependents
+    1                      1  ...                 2.0
+    2                      0  ...                 1.0
+    3                      0  ...                 0.0
+    4                      0  ...                 0.0
+    5                      0  ...                 0.0
+    ...                  ...  ...                 ...
+    149996                 0  ...                 0.0
+    149997                 0  ...                 2.0
+    149998                 0  ...                 0.0
+    149999                 0  ...                 0.0
+    150000                 0  ...                 0.0
+    >>> res = mag_metrics.decisionTree_binning_boundary(data_df,
+    ... "NumberOfTime30-59DaysPastDueNotWorse", "SeriousDlqin2yrs", 10)
+    >>> res
+    [-0.0001, 0.5, 1.5, 98]
     """
 
     # 存储分箱的边界值

@@ -25,16 +25,70 @@ def isotonic_calibrate(input_df, proba_name, label_name,
                        is_poly=False, fit_num=3, bin_num=1000,
                        bin_method="same_frenquency", bin_value_method="mean"):
     """保序回归校准
-    :param input_df: 输入数据框，一列是预测概率，一列是标签值
-    :param proba_name: 数据框中的预测概率名称
-    :param label_name: 数据框中的标签名称
-    :param is_poly: 是否针对分箱结果进行多项式拟合，用于和保序回归结果进行比较
-    :param fit_num: 多项式拟合次数
-    :param bin_num: 最大分箱个数
-    :param bin_method: 分箱方法
-    {'same_frequency','decision_tree','chi_square'}，默认是等频分箱
-    :param bin_value_method: 箱值计算方法："mean"
-    :return: input_df 新增了保序回归的计算结果(多项式拟合结果)
+
+    Parameters
+    ----------
+    input_df : DataFrame
+              有两列的数据框，一列是预测概率，一列是标签值.
+
+    proba_name : str
+                预测概率名称.
+
+    label_name : str
+                标签名称.
+
+    is_poly : bool
+              是否针对分箱结果进行多项式拟合, 用于和保序回归结果进行比较.
+
+    fit_num : int
+              多项式拟合次数.
+
+    bin_num : int
+              最大分箱个数.
+
+    bin_method : {'same_frequency','decision_tree','chi_square'}, \
+                 default='same_frequency'
+                 分箱方法, 目前提供的分箱方法有等频分箱, 决策树分箱以及卡方分箱.
+
+    bin_value_method : {'mean','medium','mode'}, default='mean'
+                       箱值计算方法, 目前提供的箱值计算方法有平均值，中位数以及众数.
+
+    Returns
+    --------
+    input_df : DataFrame
+               新增了保序回归的计算结果(多项式拟合结果).
+
+    Examples
+    ---------
+    >>> test_df
+            label     proba
+    1           1  0.241217
+    2           0  0.096250
+    3           0  0.140861
+    4           0  0.119471
+    5           0  0.005491
+    ...       ...       ...
+    149996      0  0.019120
+    149997      0  0.097704
+    149998      0  0.020250
+    149999      0  0.111851
+    150000      0  0.024276
+    >>> res = isotonic_calibrate(test_df, proba_name="proba",
+    ... label_name="label", is_poly=True,  bin_method="same_frequency",
+    ... bin_value_method="mean")
+    >>> res
+            label     proba  iso_pred  1_polynomial  2_polynomial  3_polynomial
+    1           1  0.241217  0.222568      0.221545      0.193340      0.128076
+    2           0  0.096250  0.088297      0.087469      0.079517      0.089461
+    3           0  0.140861  0.119745      0.118871      0.105503      0.107274
+    4           0  0.119471  0.103582      0.102732      0.092096      0.098910
+    5           0  0.005491  0.007915      0.007204      0.014969      0.011603
+    ...       ...       ...       ...           ...           ...           ...
+    149996      0  0.019120  0.027562      0.026823      0.030497      0.035378
+    149997      0  0.097704  0.089253      0.088424      0.080301      0.090098
+    149998      0  0.020250  0.028784      0.028042      0.031468      0.036748
+    149999      0  0.111851  0.098566      0.097724      0.087958      0.095979
+    150000      0  0.024276  0.032668      0.031921      0.034559      0.041024
     """
 
     if bin_method == "same_frequency":
@@ -148,10 +202,51 @@ def isotonic_calibrate(input_df, proba_name, label_name,
 
 def gaussian_calibrate(input_df, proba_name):
     """高斯校准
-    :param input_df: 输入数据框
-    :param proba_name: 预测概率名称
-    :return: res: 预测概率和校准概率的数据框
+
+    Parameters
+    ----------
+    input_df : DataFrame
+              有两列的数据框，一列是预测概率，一列是标签值.
+
+    proba_name : str
+                预测概率名称.
+
+    Returns
+    --------
+    res : DataFrame
+          预测概率和校准概率的数据框
+
+    Examples
+    ---------
+    >>> test_df
+            label     proba
+    1           1  0.241217
+    2           0  0.096250
+    3           0  0.140861
+    4           0  0.119471
+    5           0  0.005491
+    ...       ...       ...
+    149996      0  0.019120
+    149997      0  0.097704
+    149998      0  0.020250
+    149999      0  0.111851
+    150000      0  0.024276
+    >>> res = mag_calibrate.gaussian_calibrate(test_df, proba_name="proba")
+    >>> res
+            label     proba  gauss_pred
+    1           1  0.241217    0.737106
+    2           0  0.096250    0.569554
+    3           0  0.140861    0.631961
+    4           0  0.119471    0.603528
+    5           0  0.005491    0.195389
+    ...       ...       ...         ...
+    149996      0  0.019120    0.378461
+    149997      0  0.097704    0.571756
+    149998      0  0.020250    0.386301
+    149999      0  0.111851    0.592524
+    150000      0  0.024276    0.409872
     """
+
     # 生成标准正态分布随机数,并从小到大排序
     norm_rand = sorted(np.random.normal(0, 1, input_df.shape[0]))
 
@@ -175,11 +270,56 @@ def gaussian_calibrate(input_df, proba_name):
 
 def score_calibrate(input_df, proba_name, min_score=300, max_score=850):
     """得分校准
-    :param input_df: 输入数据框，一列是预测概率proba，一列是标签值label
-    :param proba_name: 数据框中预测概率的名称
-    :param min_score: 校准分数范围的最小值
-    :param max_score: 校准分数范围的最大值
-    :return: input_df 新增一列分数校准
+
+    Parameters
+    ----------
+    input_df : DataFrame
+              有两列的数据框，一列是预测概率，一列是标签值.
+
+    proba_name : str
+                预测概率名称.
+
+    min_score : float
+                校准分数范围的最小值
+
+    max_score : float
+                校准分数范围的最大值
+
+
+    Returns
+    --------
+    input_df : DataFrame
+               新增分数校准得分校准的计算结果
+
+    Example
+    --------
+    >>> test_df
+            label     proba
+    1           1  0.241217
+    2           0  0.096250
+    3           0  0.140861
+    4           0  0.119471
+    5           0  0.005491
+    ...       ...       ...
+    149996      0  0.019120
+    149997      0  0.097704
+    149998      0  0.020250
+    149999      0  0.111851
+    150000      0  0.024276
+    >>> res = mag_calibrate.score_calibrate(test_df, proba_name="proba")
+    >>> res
+            label     proba  score_pred
+    1           1  0.241217  436.452929
+    2           0  0.096250  354.447409
+    3           0  0.140861  379.682812
+    4           0  0.119471  367.583115
+    5           0  0.005491  303.106043
+    ...       ...       ...         ...
+    149996      0  0.019120  310.815820
+    149997      0  0.097704  355.269631
+    149998      0  0.020250  311.455028
+    149999      0  0.111851  363.272707
+    150000      0  0.024276  313.732501
     """
 
     # 获取预测概率中的最大最小值
