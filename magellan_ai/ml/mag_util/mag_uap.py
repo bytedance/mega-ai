@@ -34,6 +34,7 @@ def feature_coverage_in_diff_people(
         cols_skip=[],
         is_sorted=True):
     """对于两人群根据样本特征列计算特征覆盖率
+
     Parameters
     -----------
     df_ : DataFrame
