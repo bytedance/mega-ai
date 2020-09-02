@@ -34,18 +34,17 @@ def feature_coverage_in_diff_people(
         cols_skip=[],
         is_sorted=True):
     """对于两人群根据样本特征列计算特征覆盖率
-
     Parameters
     -----------
     df_ : DataFrame
         输入文件
-    
+
     group_col : list, ndarray, Series or DataFrame
         表示人群的标签所在的列
-    
+
     group_dict : dict, optional
         group 标签的别名，不出现在此 dict 的标签，别名等于自身
-    
+
     col_no_cover_dict : dict, optional
         自定义特征指定数据类型的非覆盖值
         default = {'int64': [-1], 'float64': [-1.0],
@@ -54,22 +53,23 @@ def feature_coverage_in_diff_people(
 
     col_handler_dict : dict, optional
         指定特征数据类型的覆盖率计算方法.
-    
+
     cols_skip : List, optional
         忽略计算特征覆盖率的特征名称.
-    
+
     is_sorted : bool, optional
         是否对特征覆盖率进行排序.
 
     Returns
     ----------
-    feat_coverage_df : DataFrame 
+    feat_coverage_df : DataFrame
         特征的覆盖率以及相应的数据类型
 
     Example
     -----------
     >>> df = pd.read_csv("./car.csv", header=0)
-    >>> print(feature_coverage_in_diff_people(df,"car4",group_dict={0:"ins", 1:"water"}))
+    >>> print(feature_coverage_in_diff_people(df,"car4",group_dict={
+        0:"ins", 1:"water"}))
           feature  coverage_0  coverage_1 feat_type
     0  Unnamed: 0    1.000000    1.000000     int64
     1     car_did    1.000000    1.000000     int64
@@ -127,6 +127,7 @@ def feature_coverage_in_diff_people(
 
     return res_df
 
+
 def single_enum_feat_eval_diff_people(
         group_df_col,
         feature_df_col,
@@ -137,27 +138,27 @@ def single_enum_feat_eval_diff_people(
     """
     1. 分析两人群在单个枚举类特征上差异。特征的例子：性别，职业，最喜欢的 app
     2. 特征取值为 2 种时，进行卡方检验，特征大于 2 种时，计算 psi 值。其它统计方法后续可以添加。
-    
+
     Parameters:
     ------------
     group_df_col : Series
         人群包所在的列
-    
+
     feature_df_col : Series
         需要分析的特征所在的列
-    
+
     group_dict : dict, optional
         group 标签的别名，不出现在此 dict 的标签，别名等于自身
-    
+
     feature_dict : dict, optional
         feature 标签别名，不出现在此 dict 的标签，别名等于自身
-    
+
     col_no_cover_dict : dict, optional
         非覆盖特征字典
-    
+
     draw_pics : bool, optional
         是否需要绘制图片，默认为 False
-    
+
     Returns:
     -----------
     report : dict
@@ -169,20 +170,26 @@ def single_enum_feat_eval_diff_people(
             特征数大于2，计算psi
         "result" : str
             差异性的结论
-    
+
     Examples
     ------------
     >>> df = pd.read_csv('car.csv', header = 0)
-    >>> dic = single_enum_feat_eval_diff_people(df['car4'], df['own_car'], group_dict={0: "ins", 1: "water"}, feature_dict={0: "not own car", 1: "own car"}, draw_pics=True)
+    >>> dic = single_enum_feat_eval_diff_people(
+        df['car4'], df['own_car'], group_dict={
+            0: "ins", 1: "water"}, feature_dict={
+            0: "not own car", 1: "own car"}, draw_pics=True)
+
           features  ins 人数    ins 比例  water 人数  water 比例
     0  not own car    6458  0.520471    102194  0.679617
     1      own car    5950  0.479529     48176  0.320383
     >>> print("chi2=%s, result=%s" % (dic["chi2"], dic["result"]))
-        chi2=1308.0008370237344, result=根据卡方检验，两人群分布有明显差异  
-    
+        chi2=1308.0008370237344, result=根据卡方检验，两人群分布有明显差异
+
 
     >>> df = pd.read_csv("./t3.csv", header=0)
-    >>> dic =  dic = single_enum_feat_eval_diff_people(df['t3_4'], df['career'], group_dict={0: "ins", 1: "water"}, draw_pics=True)
+    >>> dic =  dic = single_enum_feat_eval_diff_people(
+        df['t3_4'], df['career'], group_dict={
+            0: "ins", 1: "water"}, draw_pics=True)
     >>> print(dic['DataFrame'])
                     feat_value       ins     water       psi
     0           gongwuyuan  0.036647  0.172391  0.210191
@@ -204,7 +211,7 @@ def single_enum_feat_eval_diff_people(
     6. psi 相关信息：
         < 0.1 :  差异很小
         0.1 ~ 0.25 : 差异一般
-        >= 0.25 : 差异很大 
+        >= 0.25 : 差异很大
     """
     # 默认非覆盖标签
     if not col_no_cover_dict:
@@ -405,11 +412,13 @@ def single_continuity_feat_eval_diff_people(
             t-test / Welch 检验结果
         "result" : str
             差异性的结论
-    
+
     Example
     ----------
     >>> df = pd.read_csv('prob.csv', header = 0)
-    >>> dic = single_continuity_feat_eval_diff_people(df["group"], df["pregnant_proba"], group_dict={0: "ins", 1: "water"}, draw_pics=True)
+    >>> dic = single_continuity_feat_eval_diff_people(
+        df["group"], df["pregnant_proba"], group_dict={
+            0: "ins", 1: "water"}, draw_pics=True)
       features       ins     water
     0     mean  0.277334  0.272714
     1      std  0.209411  0.168556
