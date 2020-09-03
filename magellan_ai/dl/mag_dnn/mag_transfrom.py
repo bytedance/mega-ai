@@ -30,11 +30,14 @@ def serialize_example(feat_data):
     Examples
     ----------
     >>> serialize_example(feat_data)
-    b'\n\xe9\x01\n\x12\n\tfeature_2\x12\x05\x1a\x03\n\x01-\n\x12\n\tfeature_6\x12\x05\x1a\x03\n\x01\r\n\x12\n\
-    tfeature_7\x12\x05\x1a\x03\n\x01\x00\n\x12\n\tfeature_0\x12\x05\x1a\x03\n\x01\x01\n\x16\n\nfeature_10\x12\
-    x08\x12\x06\n\x04\x00\x00\x00@\n\x12\n\tfeature_9\x12\x05\x1a\x03\n\x01\x00\n\x15\n\tfeature_1\x12\x08\x12\
-    x06\n\x04\xe0 D?\n\x15\n\tfeature_4\x12\x08\x12\x06\n\x04=\x90M?\n\x15\n\tfeature_5\x12\x08\x12\x06\n\x04\
-    x00\x80\x0eF\n\x12\n\tfeature_3\x12\x05\x1a\x03\n\x01\x02\n\x12\n\tfeature_8\x12\x05\x1a\x03\n\x01\x06'
+    b'\n\xe9\x01\n\x12\n\tfeature_2\x12\x05\x1a\x03\n\x01-\n\x12\n\tfeature_6\x12
+    \x05\x1a\x03\n\x01\r\n\x12\n\tfeature_7\x12\x05\x1a\x03\n\x01\x00\n\x12\n\
+    tfeature_0\x12\x05\x1a\x03\n\x01\x01\n\x16\n\nfeature_10\x12\x08\x12\x06\n\
+    x04\x00\x00\x00@\n\x12\n\tfeature_9\x12\x05\x1a\x03\n\x01\x00\n\x15\n\
+    tfeature_1\x12\x08\x12\x06\n\x04\xe0 D?\n\x15\n\tfeature_4\x12\x08\
+    x12\x06\n\x04=\x90M?\n\x15\n\tfeature_5\x12\x08\x12\x06\n\x04\x00\
+    x80\x0eF\n\x12\n\tfeature_3\x12\x05\x1a\x03\n\x01\x02\n\x12\n\
+    tfeature_8\x12\x05\x1a\x03\n\x01\x06'
 
     """
 
@@ -45,23 +48,29 @@ def serialize_example(feat_data):
         feat_name = "feature_" + str(index)
 
         # 将特征封装成指定的三种类型，然后编码成特定的feature格式
-        if feature.dtype in (tf.bool, tf.int32, tf.uint32, tf.int64, tf.uint64):
-            feature_internal[feat_name] = tf.train.Feature(int64_list=tf.train.Int64List(value=[feature]))
+        if feature.dtype in (tf.bool, tf.int32, tf.uint32,
+                             tf.int64, tf.uint64):
+            feature_internal[feat_name] = tf.train.Feature(
+                int64_list=tf.train.Int64List(value=[feature]))
 
         elif feature.dtype in (tf.float32, tf.float64):
-            feature_internal[feat_name] = tf.train.Feature(float_list=tf.train.FloatList(value=[feature]))
+            feature_internal[feat_name] = tf.train.Feature(
+                float_list=tf.train.FloatList(value=[feature]))
 
         elif feature.dtype == tf.string:
             # 将eagerTensor转成bytes
             if isinstance(feature, type(tf.constant(0))):
                 feature = feature.numpy()
-            feature_internal[feat_name] = tf.train.Feature(bytes_list=tf.train.BytesList(value=[feature]))
+            feature_internal[feat_name] = tf.train.Feature(
+                bytes_list=tf.train.BytesList(value=[feature]))
 
-    example_proto = tf.train.Example(features=tf.train.Features(feature=feature_internal))
+    example_proto = tf.train.Example(
+        features=tf.train.Features(feature=feature_internal))
     return example_proto.SerializeToString()
 
 
-def tf_encode(input_path, filetype="csv", output_path="", feat_path="", index_col=None):
+def tf_encode(input_path, filetype="csv",
+              output_path="", feat_path="", index_col=None):
     """将各种文件类型转化成TFRecord格式文件
 
     Parameters
@@ -134,10 +143,10 @@ def tf_encode(input_path, filetype="csv", output_path="", feat_path="", index_co
         input_li.append(feat_filename)
         feat_path = "/".join(input_li)
 
-
     # 根据文件类型指定读取方式
     if filetype == "csv":
-        data_df = pd.read_csv(input_path, index_col=index_col)
+        data_df = pd.read_csv(input_path,
+                              index_col=index_col)
 
     # 用数组构成的元组(方便后期切片保留数据格式)
     data_tuple = tuple([data_df[col].values for col in data_df.columns])
@@ -194,7 +203,8 @@ def tf_decode(input_path, feat_info_path, output_path=""):
     """
 
     feat_df = pd.read_csv(feat_info_path)
-    feat_names, feat_nptypes = feat_df["feat_name"].values, feat_df["feat_type"].values
+    feat_names, feat_nptypes = \
+        feat_df["feat_name"].values, feat_df["feat_type"].values
 
     # 首先将保存的字符串形式转成numpy对象
     feat_types = []
@@ -231,16 +241,16 @@ def tf_decode(input_path, feat_info_path, output_path=""):
     # 创建TFRecordDataset文件
     raw_dataset = tf.data.TFRecordDataset(input_path)
 
-    columns=[]
+    columns = []
     for i in range(feats_len):
         columns.append("feature_" + str(i))
 
-    if len(feat_types)==0:
+    if len(feat_types) == 0:
         # 如果特征类型没有指定，那么就统一按照string来构建特征类型列表
         feat_types = [tf.string] * feats_len
 
     # 创建特征描述字典{特征名称:(特征大小，特征类型)}
-    feature_description={}
+    feature_description = {}
     for column, feat_type in zip(columns, feat_types):
         feature_description[column] = tf.io.FixedLenFeature([1], feat_type)
 
@@ -253,11 +263,11 @@ def tf_decode(input_path, feat_info_path, output_path=""):
 
     res_df = pd.DataFrame()
     for feat_dict in parsed_dataset:
-        new_row =[]
+        new_row = []
         for i in range(len(feat_dict)):
             feat_name = "feature_" + str(i)
             temp = feat_dict[feat_name].numpy()[0]
-            if type(temp)==np.dtype("bytes"):
+            if type(temp) == np.dtype("bytes"):
                 temp = str(temp, encoding='utf-8')
             new_row.append(temp)
         res_df = pd.concat([res_df, pd.DataFrame([new_row])], axis=0)
