@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, \
     print_function, unicode_literals
 
-from magellan_ai.dl.mag_dnn import mag_transfrom
+from magellan_ai.dl.mag_dnn import mag_transform
 
 
 if __name__ == "__main__":
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     feat_info_path = "../../../../data/test_featinfo.csv"
 
     # 将tf-record格式编码成csv文件并保存, 并且将csv第一列作为索引
-    mag_transfrom.tf_decode(input_path, feat_info_path, output_path)
+    mag_transform.tf_decode(input_path, feat_info_path, output_path)
 
     # data_df = pd.read_csv(input_path)
     # print(data_df)

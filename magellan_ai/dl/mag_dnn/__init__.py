@@ -1,3 +1,3 @@
 # coding: utf-8
 
-__all__ = ["mag_transfrom"]
+__all__ = ["mag_transform"]
