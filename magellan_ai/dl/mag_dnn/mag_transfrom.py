@@ -3,6 +3,15 @@ from __future__ import absolute_import, division, \
     print_function, unicode_literals
 import tensorflow as tf
 import pandas as pd
+import numpy as np
+
+
+def show_func():
+    print("+-------------------------------+")
+    print("|feature evaluation methods     |")
+    print("|1.tf_encode                    |")
+    print("|2.tf_decode                    |")
+    print("+-------------------------------+")
 
 
 def serialize_example(feat_data):
@@ -29,11 +38,9 @@ def serialize_example(feat_data):
 
     """
 
-
-    feature_internal={}
+    feature_internal = {}
 
     for index, feature in enumerate(feat_data):
-
         # 构建临时的特征名称
         feat_name = "feature_" + str(index)
 
@@ -44,14 +51,17 @@ def serialize_example(feat_data):
         elif feature.dtype in (tf.float32, tf.float64):
             feature_internal[feat_name] = tf.train.Feature(float_list=tf.train.FloatList(value=[feature]))
 
-        elif feature.dtype in (tf.string, tf.byte):
+        elif feature.dtype == tf.string:
+            # 将eagerTensor转成bytes
+            if isinstance(feature, type(tf.constant(0))):
+                feature = feature.numpy()
             feature_internal[feat_name] = tf.train.Feature(bytes_list=tf.train.BytesList(value=[feature]))
 
     example_proto = tf.train.Example(features=tf.train.Features(feature=feature_internal))
     return example_proto.SerializeToString()
 
 
-def tf_encode(input_path, filetype, output_path="", index_col=None):
+def tf_encode(input_path, filetype="csv", output_path="", feat_path="", index_col=None):
     """将各种文件类型转化成TFRecord格式文件
 
     Parameters
@@ -59,14 +69,26 @@ def tf_encode(input_path, filetype, output_path="", index_col=None):
     input_path: str
                 csv文件的输入路径
 
-    filetype: str
+    filetype: str, default="csv"
               输出文件类型, 目前只提供csv转化成tfrecord
 
-    output_path: str
+    output_path: str, default=""
                  tfrecord文件的输出路径，默认是csv文件的输入路径
+
+    feat_path: str, default=""
+               特征信息的输出路径
 
     index_col: int, default=None
                选择数据的第几列作为索引
+
+
+    Returns
+    ---------
+    output_file: csv
+                 根据output_path输出TFRecord
+
+    feat_info_file : csv
+                     根据feat_path输出特征信息文件, 可以用于之后的decode
 
 
     Example
@@ -75,7 +97,7 @@ def tf_encode(input_path, filetype, output_path="", index_col=None):
     >>> filetype = "csv"
     >>> output_path = "./yyy.tfrecord"
     >>> index_col = 0
-    >>> tf_encode(input_path, filetype, output_path, index_col)
+    >>> mag_transform.tf_encode(input_path, filetype, output_path, index_col)
     """
 
     # 如果导出路径为空，那么默认在输入路径下创建tf-record
@@ -83,30 +105,54 @@ def tf_encode(input_path, filetype, output_path="", index_col=None):
         # 将输入路径按照斜线分割
         input_li = input_path.split("/")
 
-        # 将最后一层的文件名替换成.tfrecords
+        # 将文件名替换成<输入文件名.tfrecords>
         csv_name = input_li.pop(-1)
-
-        # 将csv_name的csv部分弹出
         name_li = csv_name.split(".")
         name_li.pop(-1)
         name = "".join(name_li)
 
         # 将csv_name的csv部分弹出
-        tfrecords_name = "".join(name) + ".tfrecords"
+        tfrecords_name = name + ".tfrecords"
 
         # 拼接到原来路径
         input_li.append(tfrecords_name)
         output_path = "/".join(input_li)
 
+    # 如果特征信息保存路径为空，那么默认在输入路径下创建tf-record
+    if len(feat_path) == 0:
+        # 将输入路径按照斜线分割
+        input_li = input_path.split("/")
+
+        # 将文件名替换成<输入文件名_featinfo.csv>
+        feat_temp = input_li.pop(-1)
+        feat_li = feat_temp.split(".")
+        feat_li.pop(-1)
+        feat_pre_name = "".join(feat_li)
+        feat_filename = feat_pre_name + "_featinfo.csv"
+
+        # 拼接到原来路径
+        input_li.append(feat_filename)
+        feat_path = "/".join(input_li)
+
+
     # 根据文件类型指定读取方式
     if filetype == "csv":
         data_df = pd.read_csv(input_path, index_col=index_col)
 
-    data_df.fillna(0, inplace=True)  # 之后需要判断处理缺失值
-
-    # 用数组构成的元组，它返回元组的数据集
+    # 用数组构成的元组(方便后期切片保留数据格式)
     data_tuple = tuple([data_df[col].values for col in data_df.columns])
+
+    # 把array的第一维切开
     features_dataset = tf.data.Dataset.from_tensor_slices(data_tuple)
+
+    # 用来保存特征类型和特征名称，可以用于decode
+    feat_info = []
+    for features in features_dataset:
+        for col_name, feat in zip(data_df.columns, features):
+            feat_info.append([col_name, feat.dtype])
+        break
+    feat_info_df = pd.DataFrame(feat_info, columns=["feat_name", "feat_type"])
+    feat_info_df.to_csv(feat_path, index=False)
 
     # 将数据按照行进行处理
     def generator():
@@ -120,7 +166,7 @@ def tf_encode(input_path, filetype, output_path="", index_col=None):
     writer.write(serialized_features_dataset)
 
 
-def tf_decode(input_path, feat_types, output_path="", feat_names=[]):
+def tf_decode(input_path, feat_info_path, output_path=""):
     """将各种文件类型转化成TFRecord格式文件
 
     Parameters
@@ -128,24 +174,37 @@ def tf_decode(input_path, feat_types, output_path="", feat_names=[]):
     input_path: str
                 tfrecord文件的输入路径
 
-    feat_types: list
-                特征类型列表
+    feat_info_path: str
+                    特征信息数据框的输入路径
 
     output_path: str
                  csv文件的输出路径，默认是tfrecord文件的输入路径
 
-    feat_names: list, default=[]
-                特征名称列表
-
+    Returns
+    ---------
+    output_file: csv
+                 根据output_path得到
 
     Example
     ---------
-    >>> input_path = "./xxx.csv"
-    >>> filetype = "csv"
-    >>> output_path = "./yyy.tfrecord"
-    >>> index_col = 0
-    >>> tf_encode(input_path, filetype, output_path)
+    >>> input_path = "./xxx.tfrecords"
+    >>> feat_info_path = "./xxxfeatinfo./xxx.csv"
+    >>> output_path = "./yyy.csv"
+    >>> mag_transfrom.tf_decode(input_path, feat_info_path, output_path)
     """
+
+    feat_df = pd.read_csv(feat_info_path)
+    feat_names, feat_nptypes = feat_df["feat_name"].values, feat_df["feat_type"].values
+
+    # 首先将保存的字符串形式转成numpy对象
+    feat_types = []
+    for feat in feat_nptypes:
+        feat_type = feat.split("'")[1]
+        if feat_type == "string":
+            feat_type = "object"
+        if feat_type == "float64":
+            feat_type = "float32"
+        feat_types.append(np.dtype(feat_type))
 
     feats_len = len(feat_types)
 
@@ -172,7 +231,6 @@ def tf_decode(input_path, feat_types, output_path="", feat_names=[]):
     # 创建TFRecordDataset文件
     raw_dataset = tf.data.TFRecordDataset(input_path)
 
-    # 如果特征名没有指定，那么就默认按照feature_xxx指定
     columns=[]
     for i in range(feats_len):
         columns.append("feature_" + str(i))
@@ -198,33 +256,15 @@ def tf_decode(input_path, feat_types, output_path="", feat_names=[]):
         new_row =[]
         for i in range(len(feat_dict)):
             feat_name = "feature_" + str(i)
-            new_row.append(feat_dict[feat_name].numpy()[0])
+            temp = feat_dict[feat_name].numpy()[0]
+            if type(temp)==np.dtype("bytes"):
+                temp = str(temp, encoding='utf-8')
+            new_row.append(temp)
         res_df = pd.concat([res_df, pd.DataFrame([new_row])], axis=0)
 
-    res_df.columns = columns
+    # 如果特征名没有指定，那么就默认按照feature_xxx指定
+    if len(feat_names) == 0:
+        feat_names = columns
+    res_df.columns = feat_names
+
     res_df.to_csv(output_path, index=False)
-
-
-if __name__ == "__main__":
-
-    # # 保存TFrecord
-    # input_path = "../../../../data/cs-training.csv"
-    # output_path = "../../../../data/test.tfrecords"
-    #
-    # # 将csv文件编码成tf-record格式文件并保存, 并且将csv第一列作为索引
-    # tf_encode(input_path, "csv", output_path, index_col=0)
-
-    # 读取TFRecord文件
-    input_path = "../../../../data/test.tfrecords"
-    output_path = "../../../../data/ppppp.tfrecords"
-
-    # 将tf-record格式文件解码成csv文件并保存
-    feat_names = ["SeriousDlqin2yrs", "RevolvingUtilizationOfUnsecuredLines", "age",
-                  "NumberOfTime30-59DaysPastDueNotWorse", "DebtRatio", "MonthlyIncome",
-                  "NumberOfOpenCreditLinesAndLoans", "NumberOfTimes90DaysLate", "NumberRealEstateLoansOrLines",
-                  "NumberOfTime60-89DaysPastDueNotWorse", "NumberOfDependents"]
-
-    feat_types = [tf.int64, tf.float32, tf.int64, tf.int64, tf.float32, tf.float32, tf.int64,
-                  tf.int64, tf.int64, tf.int64, tf.float32]
-
-    tf_decode(input_path, feat_types, output_path, feat_names)
