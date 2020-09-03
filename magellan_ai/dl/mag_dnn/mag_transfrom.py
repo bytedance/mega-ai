@@ -9,6 +9,7 @@ import numpy as np
 def show_func():
     print("+-------------------------------+")
     print("|feature evaluation methods     |")
+    print("+-------------------------------+")
     print("|1.tf_encode                    |")
     print("|2.tf_decode                    |")
     print("+-------------------------------+")
