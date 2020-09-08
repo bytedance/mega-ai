@@ -1,3 +1,6 @@
+.idea/*
+data/*
+
 .pytest_cache/*
 .vscode/*
 __pycache__/*
@@ -7,7 +10,7 @@ dist/*
 
 dataset/*
 build/*
-.idea/*
+
 venv/*
 
 magellan_ai/.DS_Store
