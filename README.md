@@ -19,14 +19,6 @@
 pip install magellan-ai -i https://pypi.Python.org/simple/
 ```
 
-# 本地安装
-如果要给该项目贡献代码，在本地调试好后测试，本地安装方法
-
-```python
-$ git clone git@code.byted.org:cfalg/magellan_ai.git
-$ cd magellan_ai
-$ python install .
-```
 
 # 使用教程
 以`magllan_ai.ml.mag_util.mag_metrics`模块为例，安装完成之后，可以使用以下方法导入使用

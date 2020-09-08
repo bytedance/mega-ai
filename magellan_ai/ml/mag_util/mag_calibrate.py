@@ -10,11 +10,6 @@ from sklearn.isotonic import IsotonicRegression
 from magellan_ai.ml.mag_util.mag_metrics import chiSquare_binning_boundary, \
     decisionTree_binning_boundary
 
-"""
-    Author: huangning.honey
-    Date: 2020-08-01
-"""
-
 
 def show_func():
     print("+--------------------------+")

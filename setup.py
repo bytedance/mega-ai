@@ -8,9 +8,7 @@ import os
 # 包元信息
 NAME = 'magellan-ai'
 DESCRIPTION = 'Some computing tools with machine learning, python 3.6+.'
-URL = 'https://code.byted.org/cfalg/magellan_ai'  # TODO: 修改为项目实际仓库 URL
-EMAIL = 'zhangliang.thanks@bytedance.com'
-AUTHOR = 'zhangliang'
+AUTHOR = 'huangning'
 
 # 项目运行需要的依赖
 REQUIRES = ["numpy>=1.16.0,<1.19.1",
@@ -35,8 +33,6 @@ setup(
       long_description=long_description,
       long_description_content_type="text/markdown",
       author=AUTHOR,
-      author_email=EMAIL,
-      url=URL,
       classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
