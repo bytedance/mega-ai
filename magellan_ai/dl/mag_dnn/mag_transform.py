@@ -70,17 +70,17 @@ def serialize_example(feat_data):
     return example_proto.SerializeToString()
 
 
-def tf_encode(input_path, filetype="csv",
+def tf_encode(input_path, filetype,
               output_path="", feat_path="", index_col=None):
-    """将各种文件类型转化成TFRecord格式文件
+    """将各种文件类型转化成TFRecords格式文件
 
     Parameters
     -----------
     input_path: str
-                csv文件的输入路径
+            文件的输入路径
 
-    filetype: str, default="csv"
-              输出文件类型, 目前只提供csv转化成tfrecord
+    filetype: {"csv", "parquet"}
+              输出文件类型, 目前只提供csv, parquet转化成tfrecord
 
     output_path: str, default=""
                  tfrecord文件的输出路径，默认是csv文件的输入路径
@@ -119,12 +119,7 @@ def tf_encode(input_path, filetype="csv",
         csv_name = input_li.pop(-1)
         name_li = csv_name.split(".")
         name_li.pop(-1)
-        name = "".join(name_li)
-
-        # 将csv_name的csv部分弹出
-        tfrecords_name = name + ".tfrecords"
-
-        # 拼接到原来路径
+        tfrecords_name = "".join(name_li) + ".tfrecords"
         input_li.append(tfrecords_name)
         output_path = "/".join(input_li)
 
@@ -137,10 +132,8 @@ def tf_encode(input_path, filetype="csv",
         feat_temp = input_li.pop(-1)
         feat_li = feat_temp.split(".")
         feat_li.pop(-1)
-        feat_pre_name = "".join(feat_li)
-        feat_filename = feat_pre_name + "_featinfo.csv"
+        feat_filename = "".join(feat_li) + "_featinfo.csv"
 
-        # 拼接到原来路径
         input_li.append(feat_filename)
         feat_path = "/".join(input_li)
 
@@ -148,6 +141,13 @@ def tf_encode(input_path, filetype="csv",
     if filetype == "csv":
         data_df = pd.read_csv(input_path,
                               index_col=index_col)
+
+    elif filetype == "parquet":
+        data_df = pd.read_parquet(input_path,
+                                  engine="pyarrow")
+        data_df.fillna("null", inplace=True)
+    else:
+        raise Exception("The current file format does not support tfrecords conversion")
 
     # 用数组构成的元组(方便后期切片保留数据格式)
     data_tuple = tuple([data_df[col].values for col in data_df.columns])
@@ -176,31 +176,34 @@ def tf_encode(input_path, filetype="csv",
     writer.write(serialized_features_dataset)
 
 
-def tf_decode(input_path, feat_info_path, output_path=""):
+def tf_decode(input_path, feat_info_path, output_type, output_path=""):
     """将各种文件类型转化成TFRecord格式文件
 
     Parameters
     -----------
     input_path: str
-                tfrecord文件的输入路径
+            tfrecords文件的路径
 
     feat_info_path: str
-                    特征信息数据框的输入路径
+            特征信息的读入路径
+
+    output_type: {"csv", "parquet"}, default="csv"
+        输出文件的文件类型
 
     output_path: str
-                 csv文件的输出路径，默认是tfrecord文件的输入路径
+            输出文件的保存路径，默认是读入文件的路径
 
     Returns
     ---------
-    output_file: csv
-                 根据output_path得到
+    output_file: {"csv", "parquet"}
+        输出文件
 
     Example
     ---------
-    >>> input_path = "./xxx.tfrecords"
-    >>> feat_info_path = "./xxxfeatinfo./xxx.csv"
-    >>> output_path = "./yyy.csv"
-    >>> mag_transfrom.tf_decode(input_path, feat_info_path, output_path)
+    >>> input_path = "/path/to/xxx.tfrecords"
+    >>> feat_info_path = "/path/to/xxx_featinfo.csv"
+    >>> output_path = "/path/to/yyy.csv"
+    >>> mag_transfrom.tf_decode(input_path, feat_info_path, output_path, "csv")
     """
 
     feat_df = pd.read_csv(feat_info_path)
@@ -278,4 +281,9 @@ def tf_decode(input_path, feat_info_path, output_path=""):
         feat_names = columns
     res_df.columns = feat_names
 
-    res_df.to_csv(output_path, index=False)
+    if output_type == "csv":
+        res_df.to_csv(output_path, index=False)
+    elif output_type == "parquet":
+        res_df.to_parquet(output_path, index=False)
+    else:
+        raise Exception("The current file format does not support saving")

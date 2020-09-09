@@ -33,7 +33,7 @@ def cal_ks(y_true, y_pred):
     Parameters
     ----------
     y_true : list, ndarray, Series or DataFrame
-            真实标签, 取值范围是{0, 1}.
+        真实标签, 取值范围是{0, 1}.
 
     y_pred : list, ndarray, Series or DataFrame
             预测概率, 取值范围是[0, 1].
