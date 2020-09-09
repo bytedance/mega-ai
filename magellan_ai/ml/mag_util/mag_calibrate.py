@@ -12,6 +12,7 @@ from magellan_ai.ml.mag_util.mag_metrics import chiSquare_binning_boundary, \
 
 
 def show_func():
+
     print("+--------------------------+")
     print("|calibrate method          |")
     print("+--------------------------+")
@@ -24,43 +25,43 @@ def show_func():
 def isotonic_calibrate(input_df, proba_name, label_name,
                        is_poly=False, fit_num=3, bin_num=1000,
                        bin_method="same_frenquency", bin_value_method="mean"):
-    """保序回归校准
+    """Isotonic regression calibration.
 
     Parameters
     ----------
     input_df : DataFrame
-              有两列的数据框，一列是预测概率，一列是标签值.
+        There are two columns of data frame, one is prediction probability, the other is label value.
 
     proba_name : str
-                预测概率名称.
+        Prediction probability name.
 
     label_name : str
-                标签名称.
+        Label name.
 
     is_poly : bool
-              是否针对分箱结果进行多项式拟合, 用于和保序回归结果进行比较.
+        Whether polynomial fitting is used for comparision with isotonic regression calibration results.
 
     fit_num : int
-              多项式拟合次数.
+        The number of polynomial fitting.
 
     bin_num : int
-              最大分箱个数.
+        Maximum number of bins.
 
     bin_method : {'same_frequency','decision_tree','chi_square'}, \
                  default='same_frequency'
-                 分箱方法, 目前提供的分箱方法有等频分箱, 决策树分箱以及卡方分箱.
+        bin value calculation method.
 
     bin_value_method : {'mean','medium','mode'}, default='mean'
-                       箱值计算方法, 目前提供的箱值计算方法有平均值，中位数以及众数.
+        At present, there are average, median and mode.
 
     Returns
     --------
     input_df : DataFrame
-               新增了保序回归的计算结果(多项式拟合结果).
+        The calculation results of isotonic regression calibration (polynomial fitting results) are added.
 
     Examples
     ---------
-    >>> test_df
+    >>> df
             label     proba
     1           1  0.241217
     2           0  0.096250
@@ -73,7 +74,7 @@ def isotonic_calibrate(input_df, proba_name, label_name,
     149998      0  0.020250
     149999      0  0.111851
     150000      0  0.024276
-    >>> res = isotonic_calibrate(test_df, proba_name="proba",
+    >>> res = isotonic_calibrate(df, proba_name="proba",
     ... label_name="label", is_poly=True,  bin_method="same_frequency",
     ... bin_value_method="mean")
     >>> res
@@ -93,7 +94,8 @@ def isotonic_calibrate(input_df, proba_name, label_name,
 
     if bin_method == "same_frequency":
 
-        # 如果特征取值个数小于默认的分组个数，那么直接按照枚举值进行分组
+        # If the number of feature enumerations is less than k_part,
+        # they are grouped directly according to the enumeration value
         if len(input_df[proba_name].unique()) < bin_num:
             boundary_list = [input_df[proba_name].min() -
                              0.001] + [input_df[proba_name].unique().sort()]
@@ -105,22 +107,23 @@ def isotonic_calibrate(input_df, proba_name, label_name,
             boundary_list = [cur_feat_interval[0].left] + \
                             [value.right for value in cur_feat_interval]
 
-    # 决策树分箱
     elif bin_method == "decision_tree":
         boundary_list = decisionTree_binning_boundary(
-            input_df[proba_name], input_df[label_name],
-            bin_num, k_part=bin_num)
+            input_df, proba_name, label_name, bin_num)
 
-    # 卡方分箱
     elif bin_method == "chi_square":
 
-        # 如果特征枚举值个数大于100，需要先将其等频离散成100个值, 否则计算速度会很慢
+        # If the number of values of the feature is greater than 100,
+        # it is necessary to discretize the feature into 100 values
+        # at the same frequency to speed up the operation
         if len(input_df[proba_name].unique()) >= 100:
             cur_feat_interval = \
                 pd.qcut(input_df[proba_name], 100, duplicates="drop")
             input_df[proba_name] = cur_feat_interval
 
-            # 根据划分区间左右端点的平均数作为离散的枚举值，实现将连续特征转成离散特征
+            # According to the average of the left and right endpoints
+            # of the partition interval as the discrete enumeration value,
+            # the continuous feature is transformed into the discrete feature
             input_df[proba_name] = input_df[proba_name].apply(
                 lambda x: float((x.left + x.right) / 2))
 
@@ -132,20 +135,23 @@ def isotonic_calibrate(input_df, proba_name, label_name,
         raise Exception("The current {} method is not "
                         "implemented".format(bin_method))
 
-    # 二维坐标点，第1维是桶值，第2维是真实的通过率
+    # Store 2 dimensions coordinate points in the list. The first
+    # dimension is the bin value and the second
+    # dimension is the real passing rate
     coordinate_li = []
     for i in sm.range(len(boundary_list) - 1):
 
         group_df = input_df[(input_df[proba_name] > boundary_list[i])
                             & (input_df[proba_name] <= boundary_list[i + 1])]
 
-        # 计算当前组的正例占比
+        # Calculate the proportion of positive cases in the current group
         pos_ratio = sum(group_df[label_name] == 1) / group_df.shape[0] \
             if group_df.shape[0] != 0 else 1
 
         if group_df.shape[0] == 0:
 
-            # 如果当前组没有元素，默认取右侧端点
+            # If there is no element in the current group,
+            # the right endpoint is selected by defaul
             temp = boundary_list[i + 1]
         elif bin_value_method == "mean":
             temp = group_df[proba_name].mean()
@@ -153,7 +159,7 @@ def isotonic_calibrate(input_df, proba_name, label_name,
             temp = group_df[proba_name].median()
         elif bin_value_method == "mode":
 
-            # 众数可能存在多个，默认取其中第一个
+            # There may be multiple modes, and the first one is selected by default
             temp = group_df[proba_name].mode()[0]
         else:
             raise Exception("bin_value_method entered "
@@ -164,26 +170,30 @@ def isotonic_calibrate(input_df, proba_name, label_name,
 
     data_df = pd.DataFrame(coordinate_li, columns=["bin_value", "pos_ratio"])
 
-    # 必须向数据集中添加（0，0）和（1，1），相当于增加两个分箱，使得保序模型的横坐标可测范围是从[0,1]
+    # It is necessary to add (0, 0) and (1, 1) to the data set,
+    # which is equivalent to adding two boxes, so that the
+    # measurable range of the isotonic regression is [0,1]
     data_df = data_df.append({"bin_value": 0,
                               "pos_ratio": 0}, ignore_index=True)
     data_df = data_df.append({"bin_value": 1,
                               "pos_ratio": 1}, ignore_index=True)
 
-    # 为了后面的保序回归模型，需要将bin_val从小到大排序
+    # In order to train the isotonic regression model, we need
+    # to change bin value sort from small to large
     data_df.sort_values(by="bin_value", inplace=True)
 
-    # 训练保序回归模型：increasing=True表示进行增拟合
+    # Training isotonic regression model, increasing=True means incremental fitting
     iso_reg = IsotonicRegression(increasing=True)
     iso_reg.fit(X=data_df["bin_value"], y=data_df["pos_ratio"])
 
-    # 计算全量样本的保序回归预测概率
+    # The prediction probability of isotonic regression is calculated
     input_df["iso_pred"] = iso_reg.predict(input_df[proba_name])
 
-    # 判断是否还有多项式需要拟合
+    # Determine whether there are polynomials to be fitted
     if is_poly:
 
-        # 拟合额外的多项式, 并在全量数据上计算多项式的预测结果
+        # The additional polynomials are fitted and the predicted
+        # results of polynomials are calculated on the total data
         if fit_num > 9 or fit_num <= 0:
             raise Exception("Sorry, the number of fitting "
                             "times you entered exceeds the "
@@ -201,20 +211,20 @@ def isotonic_calibrate(input_df, proba_name, label_name,
 
 
 def gaussian_calibrate(input_df, proba_name):
-    """高斯校准
+    """Gaussian calibration.
 
     Parameters
     ----------
     input_df : DataFrame
-              有两列的数据框，一列是预测概率，一列是标签值.
+        There are two columns of DataFrame, one is prediction probability, the other is label value.
 
     proba_name : str
-                预测概率名称.
+        Prediction probability name.
 
     Returns
     --------
     res : DataFrame
-          预测概率和校准概率的数据框
+        DataFrame composed of prediction probability and calibration probability.
 
     Examples
     ---------
@@ -247,49 +257,48 @@ def gaussian_calibrate(input_df, proba_name):
     150000      0  0.024276    0.409872
     """
 
-    # 生成标准正态分布随机数,并从小到大排序
+    # Generate standard normal distribution random numbers and sort them from small to large
     norm_rand = sorted(np.random.normal(0, 1, input_df.shape[0]))
 
-    # 获取最大值和最小值
+    # Get the maximum and minimum values
     max_val, min_val = max(norm_rand), min(norm_rand)
 
-    # 对正态数据进行最大最小归一化,变成【0，1】的rdd
+    # Normalize the normal data to the range of [0,1]
     norm_stand = (norm_rand - min_val) / (max_val - min_val)
 
-    # 按照预测概率进行排序
+    # Ranking according to prediction probability
     input_df.sort_values(by=proba_name, inplace=True)
 
-    # 增加一列高斯分布的预测概率
+    # Increase the prediction probability of a gaussian calibaration
     input_df["gauss_pred"] = norm_stand
 
-    # 根据行索引进行排序保证输入和输出的标签顺序一致
+    # Sort according to the row index to ensure that the input and output tags are in the same order
     input_df.sort_index(inplace=True)
 
     return input_df
 
 
 def score_calibrate(input_df, proba_name, min_score=300, max_score=850):
-    """得分校准
+    """Score calibration.
 
     Parameters
     ----------
     input_df : DataFrame
-              有两列的数据框，一列是预测概率，一列是标签值.
+        There are two columns of DataFrame, one is prediction probability, the other is label value.
 
     proba_name : str
-                预测概率名称.
+        Prediction probability name.
 
     min_score : float
-                校准分数范围的最小值
+        Minimum value of calibration score range.
 
     max_score : float
-                校准分数范围的最大值
-
+        Maximum value of calibration score range.
 
     Returns
     --------
     input_df : DataFrame
-               新增分数校准得分校准的计算结果
+        The calculation results of score calibration are added.
 
     Example
     --------

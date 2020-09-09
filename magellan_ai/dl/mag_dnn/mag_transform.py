@@ -16,17 +16,17 @@ def show_func():
 
 
 def serialize_example(feat_data):
-    """ 将tf.Tensor构成的tuple转成序列化tf.Data.Examples
+    """ Let the tuple of tf.Tensor convert into tf.Data.Examples of serillization
 
     Parameters
     -----------
     feat_data: tuple
-               由数据每行的各个特征值构成的元组
+        A tuple consisting of the feature values of each row of data
 
     Returns
     ---------
     example_proto.SerializeToString(): bytes
-                                       将example序列化后的结果
+        The result of serializing tf.Data.Examples
 
     Examples
     ----------
@@ -45,21 +45,18 @@ def serialize_example(feat_data):
     feature_internal = {}
 
     for index, feature in enumerate(feat_data):
-        # 构建临时的特征名称
-        feat_name = "feature_" + str(index)
 
-        # 将特征封装成指定的三种类型，然后编码成特定的feature格式
+        feat_name = "feature_" + str(index)
         if feature.dtype in (tf.bool, tf.int32, tf.uint32,
                              tf.int64, tf.uint64):
             feature_internal[feat_name] = tf.train.Feature(
                 int64_list=tf.train.Int64List(value=[feature]))
-
         elif feature.dtype in (tf.float32, tf.float64):
             feature_internal[feat_name] = tf.train.Feature(
                 float_list=tf.train.FloatList(value=[feature]))
-
         elif feature.dtype == tf.string:
-            # 将eagerTensor转成bytes
+
+            # Let eagerTensor convert into bytes
             if isinstance(feature, type(tf.constant(0))):
                 feature = feature.numpy()
             feature_internal[feat_name] = tf.train.Feature(
@@ -70,78 +67,69 @@ def serialize_example(feat_data):
     return example_proto.SerializeToString()
 
 
-def tf_encode(input_path, filetype,
-              output_path="", feat_path="", index_col=None):
-    """将各种文件类型转化成TFRecords格式文件
+def tf_encode(input_path, filetype, feat_info_path="",
+              output_path="", index_col=None):
+    """Convert various format files into tfrecords format files
 
     Parameters
     -----------
     input_path: str
-            文件的输入路径
+        The input path of the file.
 
     filetype: {"csv", "parquet"}
-              输出文件类型, 目前只提供csv, parquet转化成tfrecord
+        The input file type.
+
+    feat_info_path: str, default=""
+        The output path of feature information. he default is the path of the read in file.
 
     output_path: str, default=""
-                 tfrecord文件的输出路径，默认是csv文件的输入路径
-
-    feat_path: str, default=""
-               特征信息的输出路径
+        The output path of the tfrecord file. The default is the path of the read in file.
 
     index_col: int, default=None
-               选择数据的第几列作为索引
-
+        Which column of data is selected as the index.
 
     Returns
     ---------
-    output_file: csv
-                 根据output_path输出TFRecord
+    output_file: tfrecord
+        Tfrecord format file
 
     feat_info_file : csv
-                     根据feat_path输出特征信息文件, 可以用于之后的decode
-
+        Feature information file
 
     Example
     ---------
-    >>> input_path = "./xxx.csv"
-    >>> filetype = "csv"
-    >>> output_path = "./yyy.tfrecord"
-    >>> index_col = 0
-    >>> mag_transform.tf_encode(input_path, filetype, output_path, index_col)
+    >>> input_path = "/path/to/x1.csv"
+    >>> output_path = "/path/to/y1.tfrecord"
+    >>> feat_path = "/path/to/x1_featinfo.csv"
+    >>> mag_transform.tf_encode(input_path, "csv", output_path, feat_path, 0)
+    >>> input_path2 = "/path/to/x2.parquet"
+    >>> output_path2 = "/path/to/y2.tfrecord"
+    >>> feat_path2 = "/path/to/x2_featinfo.csv"
+    >>> mag_transform.tf_encode(input_path2, "parquet", output_path, feat_path)
     """
 
-    # 如果导出路径为空，那么默认在输入路径下创建tf-record
     if len(output_path) == 0:
-        # 将输入路径按照斜线分割
         input_li = input_path.split("/")
-
-        # 将文件名替换成<输入文件名.tfrecords>
         csv_name = input_li.pop(-1)
         name_li = csv_name.split(".")
         name_li.pop(-1)
-        tfrecords_name = "".join(name_li) + ".tfrecords"
+        tfrecords_name = "".join(name_li) + ".tfrecord"
         input_li.append(tfrecords_name)
         output_path = "/".join(input_li)
 
-    # 如果特征信息保存路径为空，那么默认在输入路径下创建tf-record
-    if len(feat_path) == 0:
-        # 将输入路径按照斜线分割
+    if len(feat_info_path) == 0:
         input_li = input_path.split("/")
-
-        # 将文件名替换成<输入文件名_featinfo.csv>
         feat_temp = input_li.pop(-1)
         feat_li = feat_temp.split(".")
         feat_li.pop(-1)
         feat_filename = "".join(feat_li) + "_featinfo.csv"
-
         input_li.append(feat_filename)
         feat_path = "/".join(input_li)
 
-    # 根据文件类型指定读取方式
+    # Specifies the read method according to the file type
     if filetype == "csv":
         data_df = pd.read_csv(input_path,
                               index_col=index_col)
-
     elif filetype == "parquet":
         data_df = pd.read_parquet(input_path,
                                   engine="pyarrow")
@@ -149,22 +137,22 @@ def tf_encode(input_path, filetype,
     else:
         raise Exception("The current file format does not support tfrecords conversion")
 
-    # 用数组构成的元组(方便后期切片保留数据格式)
+    # The tuple is composed of array to ensure that the later slice still retains the data format
     data_tuple = tuple([data_df[col].values for col in data_df.columns])
 
-    # 把array的第一维切开
+    # Cut the first dimension of array
     features_dataset = tf.data.Dataset.from_tensor_slices(data_tuple)
 
-    # 用来保存特征类型和特征名称，可以用于decode
+    # Save the feature type and feature name for decode
     feat_info = []
     for features in features_dataset:
         for col_name, feat in zip(data_df.columns, features):
             feat_info.append([col_name, feat.dtype])
         break
     feat_info_df = pd.DataFrame(feat_info, columns=["feat_name", "feat_type"])
-    feat_info_df.to_csv(feat_path, index=False)
+    feat_info_df.to_csv(feat_info_path, index=False)
 
-    # 将数据按照行进行处理
+    # Process data as rows
     def generator():
         for features in features_dataset:
             yield serialize_example(features)
@@ -177,40 +165,44 @@ def tf_encode(input_path, filetype,
 
 
 def tf_decode(input_path, feat_info_path, output_type, output_path=""):
-    """将各种文件类型转化成TFRecord格式文件
+    """Convert tfrecord format file to specified format file.
 
     Parameters
     -----------
     input_path: str
-            tfrecords文件的路径
+        The path to the tfrecord file
 
     feat_info_path: str
-            特征信息的读入路径
+        The Path of feature information
 
-    output_type: {"csv", "parquet"}, default="csv"
-        输出文件的文件类型
+    output_type: {"csv", "parquet"}
+        The file type of the output file
 
     output_path: str
-            输出文件的保存路径，默认是读入文件的路径
+        The path to save the output file. The default is the path to read in the file
 
     Returns
     ---------
     output_file: {"csv", "parquet"}
-        输出文件
+        File of the specified type
 
     Example
     ---------
-    >>> input_path = "/path/to/xxx.tfrecords"
-    >>> feat_info_path = "/path/to/xxx_featinfo.csv"
-    >>> output_path = "/path/to/yyy.csv"
+    >>> input_path = "/path/to/x1.tfrecord"
+    >>> feat_info_path = "/path/to/x1_featinfo.csv"
+    >>> output_path = "/path/to/y1.csv"
     >>> mag_transfrom.tf_decode(input_path, feat_info_path, output_path, "csv")
+    >>> input_path2 = "/path/to/x2.tfrecord"
+    >>> feat_info_path2 = "/path/to/x2_featinfo.csv"
+    >>> output_path2 = "/path/to/y2.parquet"
+    >>> mag_transfrom.tf_decode(input_path, feat_info_path, output_path, "parquet")
     """
 
     feat_df = pd.read_csv(feat_info_path)
     feat_names, feat_nptypes = \
         feat_df["feat_name"].values, feat_df["feat_type"].values
 
-    # 首先将保存的字符串形式转成numpy对象
+    # Convert the saved feature information into numpy object
     feat_types = []
     for feat in feat_nptypes:
         feat_type = feat.split("'")[1]
@@ -222,63 +214,57 @@ def tf_decode(input_path, feat_info_path, output_type, output_path=""):
 
     feats_len = len(feat_types)
 
-    # 如果导出路径为空，那么默认在输入路径下创建csv
+    # If the export path is empty, the specified format file is created in the input path by default
     if len(output_path) == 0:
-        # 将输入路径按照斜线分割
         input_li = input_path.split("/")
-
-        # 将最后一层的文件名替换成.tfrecords
         csv_name = input_li.pop(-1)
-
-        # 将csv_name的csv部分弹出
         name_li = csv_name.split(".")
         name_li.pop(-1)
-        name = "".join(name_li)
+        if output_type == "csv":
+            tfrecords_name = "".join(name_li) + ".csv"
+        elif output_type == "parquet":
+            tfrecords_name = "".join(name_li) + ".parquet"
+        else:
+            raise Exception("current type of file is not supported")
 
-        # 将csv_name的csv部分弹出
-        tfrecords_name = "".join(name) + ".csv"
-
-        # 拼接到原来路径
         input_li.append(tfrecords_name)
         output_path = "/".join(input_li)
 
-    # 创建TFRecordDataset文件
+    # Create TFRecordDataset object
     raw_dataset = tf.data.TFRecordDataset(input_path)
 
     columns = []
     for i in range(feats_len):
         columns.append("feature_" + str(i))
 
+    # If the feature type is not specified, the list of feature types is constructed according to string
     if len(feat_types) == 0:
-        # 如果特征类型没有指定，那么就统一按照string来构建特征类型列表
         feat_types = [tf.string] * feats_len
 
-    # 创建特征描述字典{特征名称:(特征大小，特征类型)}
+    # Create feature description dictionary {feature Name: (feature size, feature type)}
     feature_description = {}
     for column, feat_type in zip(columns, feat_types):
         feature_description[column] = tf.io.FixedLenFeature([1], feat_type)
 
-    # 使用上述特征描述字典来解析example，将序列化的example解析成正常的字符串
+    # Use the above feature description dictionary to parse the
+    # tf.Data.Examples and parse the serialized tf.Data.Examples into a normal string
     def _parse_function(example_proto):
         return tf.io.parse_single_example(example_proto, feature_description)
 
-    # 使用map将函数应用于每一行
     parsed_dataset = raw_dataset.map(_parse_function)
-
-    res_df = pd.DataFrame()
-    for feat_dict in parsed_dataset:
+    total_row = []
+    for index, feat_dict in enumerate(parsed_dataset):
         new_row = []
         for i in range(len(feat_dict)):
             feat_name = "feature_" + str(i)
-            temp = feat_dict[feat_name].numpy()[0]
-            if type(temp) == np.dtype("bytes"):
-                temp = str(temp, encoding='utf-8')
-            new_row.append(temp)
-        res_df = pd.concat([res_df, pd.DataFrame([new_row])], axis=0)
+            cur_feat_value = feat_dict[feat_name].numpy()[0]
+            if type(cur_feat_value) == np.dtype("bytes"):
+                cur_feat_value = str(cur_feat_value, encoding='utf-8')
+            new_row.append(cur_feat_value)
+        total_row.append(new_row)
+    res_df = pd.DataFrame(total_row, columns=feat_names)
 
-    # 如果特征名没有指定，那么就默认按照feature_xxx指定
-    if len(feat_names) == 0:
-        feat_names = columns
+    # If the feature name is not specified, the default is `feature_xxx` designated
     res_df.columns = feat_names
 
     if output_type == "csv":
