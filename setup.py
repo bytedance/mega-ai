@@ -14,8 +14,8 @@ AUTHOR = 'huangning'
 REQUIRES = ["numpy>=1.16.0,<1.19.1",
             "pandas>=1.0.4,<1.0.5",
             "scikit-learn>=0.21.3,<0.23.1",
-            "six>=1.11.0,<2.0.0"
-            "tensorflow>=2.0.0,<2.4.0"
+            "six>=1.11.0,<2.0.0",
+            "tensorflow>=2.0.0,<2.4.0",
             "pyarrow>=1.0.0, <2.0.0"
             ]
 
@@ -29,7 +29,7 @@ except IOError:
 
 setup(
       name='byted-'+NAME,
-      version='1.2.2',
+      version='1.2.3',
       description=DESCRIPTION,
       long_description=long_description,
       long_description_content_type="text/markdown",
