@@ -28,23 +28,23 @@ def show_func():
 
 
 def cal_ks(y_true, y_pred):
-    """Calculate KS
+    """Calculate KS.
 
     Parameters
     ----------
     y_true : list, ndarray, Series or DataFrame
-            真实标签, 取值范围是{0, 1}.
+        True label, the value range is {0, 1}.
 
     y_pred : list, ndarray, Series or DataFrame
-            预测概率, 取值范围是[0, 1].
+        Prediction probability, the value range is [0, 1].
 
     Returns
     --------
     cutoff : float
-        KS值对应的阈值.
+        The threshold corresponding to KS value.
 
     ks : float
-         模型的KS值.
+        KS value of the model.
 
     Examples
     ----------
@@ -82,7 +82,7 @@ def cal_ks(y_true, y_pred):
 
     Notes
     -----
-    真实标签和预测概率的长度要保持一致
+    The length of real label and prediction probability should be consisten.
     """
 
     fpr, tpr, thresholds = roc_curve(y_true, y_pred)
@@ -93,20 +93,20 @@ def cal_ks(y_true, y_pred):
 
 
 def cal_auc(y_true, y_pred):
-    """Calculate AUC
+    """Calculate AUC.
 
     Parameters
     ----------
     y_true : list, ndarray, Series or DataFrame
-             真实标签值 {0,1}.
+        True label, the value range is {0, 1}.
 
     y_pred : list, ndarray, Series or DataFrame
-             预测概率, 取值范围是[0, 1].
+        Prediction probability, the value range is [0, 1].
 
     Returns
     --------
     auc: float
-         模型的AUC值
+        AUC value of the model.
 
     Examples
     ----------
@@ -136,7 +136,7 @@ def cal_auc(y_true, y_pred):
 
     Notes
     -----
-    真实标签和预测概率的长度要保持一致
+    The length of real label and prediction probability should be consisten.
     """
 
     # y_true = np.array(y_true)
@@ -159,24 +159,24 @@ def cal_lift(y_true, y_pred, k_part=10):
     Parameters
     ----------
     y_true : list, ndarray, Series or DataFrame
-             真实标签值 {0,1}.
+        True label, the value range is {0, 1}.
 
     y_pred : list, ndarray, Series or DataFrame
-             预测概率, 取值范围是[0, 1].
+        Prediction probability, the value range is [0, 1].
 
     k_part : int, default=10
-             最大分箱个数.
+        Maximum number of bins.
 
     Returns
     ----------
     lift: list
-          不同阈值下的lift.
+        Lift values under different thresholds.
 
     depth: list
-         不同阈值下的depth.
+        Depth values under different thresholds.
 
     thresholds: list
-         阈值列表.
+        List of thresholds.
 
     Examples
     ----------
@@ -223,7 +223,7 @@ def cal_lift(y_true, y_pred, k_part=10):
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
 
-    # 根据最大分箱个数确定阈值列表
+    # Determine the threshold list according to the maximum number of bins
     if len(np.unique(y_pred)) <= k_part:
         thres_list = sorted(np.unique(y_pred), reverse=True)
     else:
@@ -251,23 +251,23 @@ def cal_lift(y_true, y_pred, k_part=10):
 
 
 def cal_psi(base_score, cur_score, k_part=10):
-    """Calculate PSI
+    """Calculate PSI.
 
     Parameters
     ----------
     base_score : list, ndarray, Series or DataFrame
-                 训练集上的预测概率.
+        The prediction probability on the training set.
 
     cur_score: list, ndarray, Series or DataFrame
-               测试集上的预测概率.
+        The Prediction probability on the test set.
 
     k_part : int, default=10
-             最大分箱个数.
+        Maximum number of bins.
 
     Returns
     ----------
     psi : float
-          模型的PSI值.
+        PSI value of the model.
 
     Examples
     ----------
@@ -295,7 +295,7 @@ def cal_psi(base_score, cur_score, k_part=10):
     array([1.46742923])
     """
 
-    # 根据k_part获取分箱间隔值列表
+    # Determine the threshold list according to the maximum number of bins
     if len(np.unique(base_score)) <= k_part:
         thres_list = sorted(np.unique(base_score))
         thres_list = [min(thres_list) - 0.001] + thres_list
@@ -309,7 +309,7 @@ def cal_psi(base_score, cur_score, k_part=10):
     cur_score_len = len(cur_score)
     psi = 0
 
-    # 计算每组的psi值
+    # Calculate the PSI value of each bin
     for i in sm.range(len(thres_list[:-1])):
         base_rate = sum((np.array(base_score) > thres_list[i])
                         & (np.array(base_score) <=
@@ -324,37 +324,37 @@ def cal_psi(base_score, cur_score, k_part=10):
 
 def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
            bin_method="same_frequency"):
-    """Calculate IV
+    """Calculate IV.
 
     Parameters
     ----------
     input_df : DataFrame
-               样本集.
+        Sample set.
 
     label_name : str
-                 标签名.
+        Label name.
 
     k_part : int, default=10
-             最大分箱个数.
+        Maximum number of bins.
 
     is_sorted : bool, default=True
-                是否针对IV值降序排列.
+        Whether to sort in descending order for IV value.
 
     k_part : int, default=10
-             最大分箱个数.
+        Maximum number of bins.
 
     bin_method : {'same_frequency', 'decision_tree', 'chi_square'}, \
                  default='same_frequency'
-                 分箱方法，目前提供的分箱方法有等频分箱，决策树分箱以及卡方分箱.
+        binning methods.
 
     Returns
     ----------
     iv_df : DataFrame
-            特征的IV以及每组的WOE值.
+        The IV of the features and the woe value of each group.
 
     Examples
     ----------
-    >>> data_df
+    >>> df
     SeriousDlqin2yrs  ...  NumberOfDependents
     1                      1  ...                 2.0
     2                      0  ...                 1.0
@@ -367,7 +367,7 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
     149998                 0  ...                 0.0
     149999                 0  ...                 0.0
     150000                 0  ...                 0.0
-    >>> res = mag_metrics.cal_iv(data_df, "SeriousDlqin2yrs", is_sorted=True,
+    >>> res = mag_metrics.cal_iv(df, "SeriousDlqin2yrs", is_sorted=True,
     ... k_part=10, bin_type="same_frequency")
     >>> print(res)
                   feature                         woe_value     iv_value
@@ -393,11 +393,11 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
         ivi = (posri - negri) * np.log(posri / negri)
         return ivi, woei
 
-    # 提取特征列表
+    # Extract feature list
     feat_list = list(input_df.columns)
     feat_list.remove(label_name)
 
-    # 计算每个特征的woe和iv值
+    # The woe and IV values of each feature are calculated
     iv_dict = {}
     pos_num, neg_num = sum(input_df[label_name] == 1), sum(
         input_df[label_name] == 0)
@@ -407,20 +407,20 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
         iv_total = 0
         cur_feat_woe = {}
 
-        # 将类别特征变成数值特征
+        # Turn object features into numerical features
         if input_df[col_name].dtypes in (np.dtype('bool'), np.dtype('object')):
             label_encoder = {label: idx for idx, label
                              in enumerate(np.unique(input_df[col_name]))}
             input_df[col_name] = input_df[col_name].map(label_encoder)
 
-        # 将当前特征的非空值和空值部分剥离
+        # Split the non null value and null value part of the current feature
         input_na_df = input_df[input_df[col_name].isna()]
         input_df = input_df[~input_df[col_name].isna()]
 
-        # 等频分箱
         if bin_method == "same_frequency":
 
-            # 如果特征枚举数量小于默认的分组个数，则直接按照枚举值进行分组
+            # If the number of feature enumerations is less than k_part,
+            # they are grouped directly according to the enumeration value
             if len(input_df[col_name].unique()) < k_part:
                 boundary_list = [input_df[col_name].min() -
                                  0.001] + sorted(input_df[col_name].unique())
@@ -430,22 +430,25 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
                             duplicates="drop").unique())
                 boundary_list = [cur_feat_interval[0].left] + \
                                 [value.right for value in cur_feat_interval]
-        # 决策树分箱
+
         elif bin_method == "decision_tree":
 
             boundary_list = decisionTree_binning_boundary(
                 input_df, col_name, label_name, k_part)
 
-        # 卡方分箱
         elif bin_method == "chi_square":
 
-            # 如果特征的取值个数大于100，那么需要先将其等频离散化成100个值
+            # If the number of values of the feature is greater than 100,
+            # it is necessary to discretize the feature into 100 values
+            # at the same frequency to speed up the operation
             if len(input_df[col_name].unique()) >= 100:
                 cur_feat_interval = \
                     pd.qcut(input_df[col_name], 100, duplicates="drop")
                 input_df[col_name] = cur_feat_interval
 
-                # 根据划分区间左右端点的平均数作为离散的枚举值，将连续特征转成离散特征
+                # According to the average of the left and right endpoints
+                # of the partition interval as the discrete enumeration value,
+                # the continuous feature is transformed into the discrete feature
                 input_df[col_name] = input_df[col_name].apply(
                     lambda x: float((x.left + x.right) / 2))
 
@@ -468,7 +471,7 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
             cur_feat_woe[interval] = woei
             iv_total += ivi
 
-        # 计算缺失值部分的ivi和woei
+        # The IVI and woei of the missing values were calculated separately
         if input_na_df.shape[0] != 0:
             cur_group_df = input_na_df
             ivi, woei = get_ivi(cur_group_df, label_name, pos_num, neg_num)
@@ -476,7 +479,7 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
             iv_total += ivi
 
         iv_dict[col_name] = [cur_feat_woe, iv_total]
-        print("\r特征IV计算已完成{:.2%}".format((index+1)/feat_len), end="")
+        print("\rFeature IV calculation completed {:.2%}".format((index+1)/feat_len), end="")
 
     print()
     iv_df = pd.DataFrame.from_dict(
@@ -490,33 +493,34 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
 
 def cal_feature_coverage(input_df, col_no_cover_dict={},
                          col_handler_dict={}, cols_skip=[], is_sorted=True):
-    """Analyze feature coverage for pandas dataframe
+    """Analyze feature coverage for pandas dataframe.
 
     Parameters
     ----------
     input_df : DataFrame
-               样本集.
+        Sample set.
 
     col_no_cover_dict : dict
-                        自定义特征指定数据类型的非覆盖值.
+        A custom feature specifies a non overriding value for the data type.
 
     col_handler_dict : dict
-                       特征指定数据类型的覆盖率计算方法.
+        A custom feature specifies a Coverage calculation method for the data type.
 
     cols_skip : list
-                忽略计算特征覆盖率的特征名称.
+        Ignore feature names for which feature coverage is calculated.
+
 
     is_sorted : bool
-                是否对特征覆盖率进行倒序排列.
+        Whether to arrange feature coverage in reverse order.
 
     Returns
     ----------
     feat_coverage_df : DataFrame
-                       特征覆盖率.
+        Feature coverage.
 
     Examples
     ----------
-    >>> data_df
+    >>> df
             SeriousDlqin2yrs  ...  NumberOfDependents
     1                      1  ...                 2.0
     2                      0  ...                 1.0
@@ -529,7 +533,7 @@ def cal_feature_coverage(input_df, col_no_cover_dict={},
     149998                 0  ...                 0.0
     149999                 0  ...                 0.0
     150000                 0  ...                 0.0
-    >>> ans = mag_metrics.cal_feature_coverage(data_df,
+    >>> ans = mag_metrics.cal_feature_coverage(df,
     ... cols_skip=["SeriousDlqin2yrs"])
     >>> print(ans)
                                     feature  coverage feat_type
@@ -608,7 +612,7 @@ def cal_feature_coverage(input_df, col_no_cover_dict={},
         coverage = (row_num - no_cover_count) * 1.0 / (row_num + 1e-6)
 
         feat_coverage_dict[col_name] = [coverage, input_df[col_name].dtype]
-        print("\r特征覆盖率计算已完成{:.2%}".format((index+1)/cols_len), end="")
+        print("\rFeature coverage calculation completed{:.2%}".format((index+1)/cols_len), end="")
 
     print()
     feat_coverage_df = pd.DataFrame.from_dict(
@@ -626,27 +630,30 @@ def cal_feature_coverage(input_df, col_no_cover_dict={},
 
 # 卡方分箱
 def chiSquare_binning_boundary(input_df, feat_name, label_name, k_part):
-    """Calculate binning threshold list by chisqure binning method
+    """Calculate binning threshold list by chisqure binning method.
 
     Parameters
     ----------
     input_df : DataFrame
-               样本集.
+        Sample set.
+
     feat_name : str
-                特征名称.
+        Feature name.
+
     label_name : str
-                 标签名称.
+        Label name.
+
     k_part : int
-             最大分箱个数.
+        Maximum number of bins.
 
     Returns
     ---------
     boundary : list
-               分箱的边界列表.
+        Boundary list of bins.
 
     Examples
     ----------
-    >>> data_df
+    >>> df
             SeriousDlqin2yrs  ...  NumberOfDependents
     1                      1  ...                 2.0
     2                      0  ...                 1.0
@@ -659,7 +666,7 @@ def chiSquare_binning_boundary(input_df, feat_name, label_name, k_part):
     149998                 0  ...                 0.0
     149999                 0  ...                 0.0
     150000                 0  ...                 0.0
-    >>> res = mag_metrics.chiSquare_binning_boundary(data_df,
+    >>> res = mag_metrics.chiSquare_binning_boundary(df,
     ... "NumberOfTime30-59DaysPastDueNotWorse", "SeriousDlqin2yrs", 10)
     >>> res
     [-0.0001, 0, 1, 2, 3, 4, 5, 6, 7, 96, 98]
@@ -670,7 +677,7 @@ def chiSquare_binning_boundary(input_df, feat_name, label_name, k_part):
     expected_ratio = pos_num / all_num
     feat_value_list = sorted(input_df[feat_name].unique())
 
-    # 计算每个区间的chi2统计量
+    # Calculate the Chi2 statistic for each interval
     chi2_list = []
     pos_list = []
     expected_pos_list = []
@@ -688,13 +695,13 @@ def chiSquare_binning_boundary(input_df, feat_name, label_name, k_part):
         pos_list.append(temp_all_num)
         expected_pos_list.append(expected_pos_num)
 
-    # 将结果导出到数据框
+    # Export results to a DataFrame
     chi2_df = pd.DataFrame({feat_name: feat_value_list,
                             "chi2_value": chi2_list,
                             "pos_num": pos_list,
                             "expected_pos_cnt": expected_pos_list})
 
-    # 根据index合并chi2_df中相邻位置的数值
+    # Merge chi2_df according to index values of adjacent positions
     def merge(input_df, merge_index, origin_index):
 
         input_df.loc[merge_index, "pos_num"] = \
@@ -712,7 +719,8 @@ def chiSquare_binning_boundary(input_df, feat_name, label_name, k_part):
 
         return input_df
 
-    # 计算当前特征的卡方分箱的个数，即当前特征的所有枚举值的个数
+    # Calculate the number of chi square bins of the current feature,
+    # that is, the number of all enumeration values of the current feature
     group_num = len(chi2_df)
     while group_num > k_part:
         min_index = chi2_df[chi2_df["chi2_value"]
@@ -735,29 +743,31 @@ def chiSquare_binning_boundary(input_df, feat_name, label_name, k_part):
     return boundary
 
 
-# 决策树分箱
 def decisionTree_binning_boundary(input_df, feat_name, label_name, k_part):
-    """Calculate binning threshold list by decisionTree binning method
+    """Calculate binning threshold list by decisionTree binning method.
 
     Parameters
     ----------
     input_df : DataFrame
-               样本集.
+        Sample set.
+
     feat_name : str
-                特征名称.
+        Feature name.
+
     label_name : str
-                 标签名称.
+        Label name.
+
     k_part : int
-             最大分箱个数.
+        Maximum number of bins.
 
     Returns
     ---------
     boundary : list
-               分箱的边界列表.
+        Boundary list of bins.
 
     Examples
     ---------
-    >>> data_df
+    >>> df
             SeriousDlqin2yrs  ...  NumberOfDependents
     1                      1  ...                 2.0
     2                      0  ...                 1.0
@@ -770,13 +780,13 @@ def decisionTree_binning_boundary(input_df, feat_name, label_name, k_part):
     149998                 0  ...                 0.0
     149999                 0  ...                 0.0
     150000                 0  ...                 0.0
-    >>> res = mag_metrics.decisionTree_binning_boundary(data_df,
+    >>> res = mag_metrics.decisionTree_binning_boundary(df,
     ... "NumberOfTime30-59DaysPastDueNotWorse", "SeriousDlqin2yrs", 10)
     >>> res
     [-0.0001, 0.5, 1.5, 98]
     """
 
-    # 存储分箱的边界值
+    # Store the boundary value of the bin
     boundary = []
     label_value = input_df[label_name].values
     feat_value = input_df[feat_name].values.reshape(-1, 1)
