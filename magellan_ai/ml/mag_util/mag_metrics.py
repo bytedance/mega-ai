@@ -433,7 +433,7 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
 
         elif bin_method == "decision_tree":
 
-            boundary_list = decisionTree_binning_boundary(
+            boundary_list = decisiontree_binning_boundary(
                 input_df, col_name, label_name, k_part)
 
         elif bin_method == "chi_square":
@@ -452,7 +452,7 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
                 input_df[col_name] = input_df[col_name].apply(
                     lambda x: float((x.left + x.right) / 2))
 
-            boundary_list = chiSquare_binning_boundary(
+            boundary_list = chisquare_binning_boundary(
                 input_df, col_name, label_name, k_part)
             input_df[col_name] = input_df[col_name].astype("float64")
 
@@ -629,7 +629,7 @@ def cal_feature_coverage(input_df, col_no_cover_dict={},
 
 
 # 卡方分箱
-def chiSquare_binning_boundary(input_df, feat_name, label_name, k_part):
+def chisquare_binning_boundary(input_df, feat_name, label_name, k_part):
     """Calculate binning threshold list by chisqure binning method.
 
     Parameters
@@ -666,7 +666,7 @@ def chiSquare_binning_boundary(input_df, feat_name, label_name, k_part):
     149998                 0  ...                 0.0
     149999                 0  ...                 0.0
     150000                 0  ...                 0.0
-    >>> res = mag_metrics.chiSquare_binning_boundary(df,
+    >>> res = mag_metrics.chisquare_binning_boundary(df,
     ... "NumberOfTime30-59DaysPastDueNotWorse", "SeriousDlqin2yrs", 10)
     >>> res
     [-0.0001, 0, 1, 2, 3, 4, 5, 6, 7, 96, 98]
@@ -743,7 +743,7 @@ def chiSquare_binning_boundary(input_df, feat_name, label_name, k_part):
     return boundary
 
 
-def decisionTree_binning_boundary(input_df, feat_name, label_name, k_part):
+def decisiontree_binning_boundary(input_df, feat_name, label_name, k_part):
     """Calculate binning threshold list by decisionTree binning method.
 
     Parameters
@@ -780,7 +780,7 @@ def decisionTree_binning_boundary(input_df, feat_name, label_name, k_part):
     149998                 0  ...                 0.0
     149999                 0  ...                 0.0
     150000                 0  ...                 0.0
-    >>> res = mag_metrics.decisionTree_binning_boundary(df,
+    >>> res = mag_metrics.decisiontree_binning_boundary(df,
     ... "NumberOfTime30-59DaysPastDueNotWorse", "SeriousDlqin2yrs", 10)
     >>> res
     [-0.0001, 0.5, 1.5, 98]

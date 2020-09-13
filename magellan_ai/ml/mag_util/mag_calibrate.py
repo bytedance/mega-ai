@@ -7,8 +7,8 @@ import six.moves as sm
 import pandas as pd
 import numpy as np
 from sklearn.isotonic import IsotonicRegression
-from magellan_ai.ml.mag_util.mag_metrics import chiSquare_binning_boundary, \
-    decisionTree_binning_boundary
+from magellan_ai.ml.mag_util.mag_metrics import chisquare_binning_boundary, \
+    decisiontree_binning_boundary
 
 
 def show_func():
@@ -108,7 +108,7 @@ def isotonic_calibrate(input_df, proba_name, label_name,
                             [value.right for value in cur_feat_interval]
 
     elif bin_method == "decision_tree":
-        boundary_list = decisionTree_binning_boundary(
+        boundary_list = decisiontree_binning_boundary(
             input_df, proba_name, label_name, bin_num)
 
     elif bin_method == "chi_square":
@@ -127,7 +127,7 @@ def isotonic_calibrate(input_df, proba_name, label_name,
             input_df[proba_name] = input_df[proba_name].apply(
                 lambda x: float((x.left + x.right) / 2))
 
-        boundary_list = chiSquare_binning_boundary(
+        boundary_list = chisquare_binning_boundary(
             input_df, proba_name, label_name, bin_num)
         input_df[proba_name] = input_df[proba_name].astype("float64")
 
