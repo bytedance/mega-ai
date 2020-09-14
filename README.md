@@ -15,8 +15,8 @@
 # 在线安装
 建议使用官方镜像，安装最新版本。
 
-```python
-pip install magellan-ai -i https://pypi.Python.org/simple/
+```
+$ pip install --index-url https://pypi.org/simple/ mega-spark
 ```
 
 
