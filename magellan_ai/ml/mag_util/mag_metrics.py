@@ -612,7 +612,7 @@ def cal_feature_coverage(input_df, col_no_cover_dict={},
         coverage = (row_num - no_cover_count) * 1.0 / (row_num + 1e-6)
 
         feat_coverage_dict[col_name] = [coverage, input_df[col_name].dtype]
-        print("\rFeature coverage calculation completed{:.2%}".format((index+1)/cols_len), end="")
+        print("\rFeature coverage calculation completed {:.2%}".format((index+1)/cols_len), end="")
 
     print()
     feat_coverage_df = pd.DataFrame.from_dict(
