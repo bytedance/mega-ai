@@ -7,7 +7,7 @@ import os
 
 # 包元信息
 NAME = 'magellan-ai'
-DESCRIPTION = 'Some computing tools with machine learning, python 3.6+.'
+DESCRIPTION = 'Some computing tools with machine learning'
 AUTHOR = 'huangning'
 
 # 项目运行需要的依赖
@@ -29,7 +29,7 @@ except IOError:
 
 setup(
       name='byted-'+NAME,
-      version='1.2.3',
+      version='1.2.4',
       description=DESCRIPTION,
       long_description=long_description,
       long_description_content_type="text/markdown",

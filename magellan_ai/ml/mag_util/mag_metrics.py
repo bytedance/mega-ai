@@ -407,15 +407,15 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
         iv_total = 0
         cur_feat_woe = {}
 
+        # Split the non null value and null value part of the current feature
+        input_na_df = input_df[input_df[col_name].isna()]
+        input_df = input_df[~input_df[col_name].isna()]
+
         # Turn object features into numerical features
         if input_df[col_name].dtypes in (np.dtype('bool'), np.dtype('object')):
             label_encoder = {label: idx for idx, label
                              in enumerate(np.unique(input_df[col_name]))}
             input_df[col_name] = input_df[col_name].map(label_encoder)
-
-        # Split the non null value and null value part of the current feature
-        input_na_df = input_df[input_df[col_name].isna()]
-        input_df = input_df[~input_df[col_name].isna()]
 
         if bin_method == "same_frequency":
 
