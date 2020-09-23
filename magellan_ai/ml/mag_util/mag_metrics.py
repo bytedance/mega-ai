@@ -419,8 +419,10 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
 
         if bin_method == "same_frequency":
 
-            # If the number of feature enumerations is less than k_part,
-            # they are grouped directly according to the enumeration value
+            # If the number of feature enumerations is
+            # less than k_part, they are grouped
+            # directly according to the
+            # enumeration value
             if len(input_df[col_name].unique()) < k_part:
                 boundary_list = [input_df[col_name].min() -
                                  0.001] + sorted(input_df[col_name].unique())
@@ -447,8 +449,9 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
                 input_df[col_name] = cur_feat_interval
 
                 # According to the average of the left and right endpoints
-                # of the partition interval as the discrete enumeration value,
-                # the continuous feature is transformed into the discrete feature
+                # of the partition interval as the discrete enumeration
+                # value, the continuous feature is transformed into
+                # the discrete feature
                 input_df[col_name] = input_df[col_name].apply(
                     lambda x: float((x.left + x.right) / 2))
 
@@ -479,7 +482,8 @@ def cal_iv(input_df, label_name, is_sorted=True, k_part=10,
             iv_total += ivi
 
         iv_dict[col_name] = [cur_feat_woe, iv_total]
-        print("\rFeature IV calculation completed {:.2%}".format((index+1)/feat_len), end="")
+        print("\rFeature IV calculation compl"
+              "eted {:.2%}".format((index+1)/feat_len), end="")
 
     print()
     iv_df = pd.DataFrame.from_dict(
@@ -504,7 +508,8 @@ def cal_feature_coverage(input_df, col_no_cover_dict={},
         A custom feature specifies a non overriding value for the data type.
 
     col_handler_dict : dict
-        A custom feature specifies a Coverage calculation method for the data type.
+        A custom feature specifies a Coverage calculation
+        method for the data type.
 
     cols_skip : list
         Ignore feature names for which feature coverage is calculated.
@@ -612,7 +617,8 @@ def cal_feature_coverage(input_df, col_no_cover_dict={},
         coverage = (row_num - no_cover_count) * 1.0 / (row_num + 1e-6)
 
         feat_coverage_dict[col_name] = [coverage, input_df[col_name].dtype]
-        print("\rFeature coverage calculation completed {:.2%}".format((index+1)/cols_len), end="")
+        print("\rFeature coverage calculation "
+              "completed {:.2%}".format((index+1)/cols_len), end="")
 
     print()
     feat_coverage_df = pd.DataFrame.from_dict(

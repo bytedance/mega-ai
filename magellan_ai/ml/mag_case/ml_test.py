@@ -1,9 +1,8 @@
 # coding: utf-8
-
 from __future__ import absolute_import, division, \
     print_function, unicode_literals
 import pandas as pd
-from magellan_ai.ml.mag_util import mag_uap, mag_metrics, mag_calibrate
+from magellan_ai.ml.mag_util import mag_metrics
 from sklearn.linear_model import LogisticRegression
 
 if __name__ == "__main__":
@@ -22,12 +21,12 @@ if __name__ == "__main__":
 
     # calculate IV and coverage
     print(mag_metrics.cal_iv(data_df, "Survived", bin_method="same_frequency"))
-    # print(mag_metrics.cal_feature_coverage(data_df))
-    # data_df.fillna(0, inplace=True)
-    #
-    # # model training test
-    # X, y = data_df.iloc[:, 1:], data_df["SeriousDlqin2yrs"]
-    # lr = LogisticRegression(penalty="l2", max_iter=1000, random_state=99)
+    print(mag_metrics.cal_feature_coverage(data_df))
+    data_df.fillna(0, inplace=True)
+
+    # model training test
+    X, y = data_df.iloc[:, 1:], data_df["Survived"]
+    lr = LogisticRegression(penalty="l2", max_iter=1000, random_state=99)
     # X.fillna(0, inplace=True)
     # lr.fit(X, y)
     # y_proba = lr.predict_proba(X)[:, 1]

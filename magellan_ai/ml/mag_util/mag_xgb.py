@@ -31,10 +31,13 @@ def get_xgboost_feature_imps(xgb_model_, importance_type,
 
     Note
     -------
-    get_xgboost_feature_imps is equivalent to integrating get_Score and feature_importances_.
-    The get_xgboost_feature_imps can not only specify feature importance type
-    , but also the importance of all features can be calculated. In addition, the importance
-    of features can be sorted
+    get_xgboost_feature_imps is equivalent to integrating get_Score
+    and feature_importances_. The get_xgboost_feature_imps
+    can not only specify feature importance type
+    , but also the importance of all features
+    can be calculated. In addition,
+    the importance of features
+    can be sorted
     """
 
     feature_map_ = xgb_model_.get_booster(). \

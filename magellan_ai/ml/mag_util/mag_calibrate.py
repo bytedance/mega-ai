@@ -30,7 +30,8 @@ def isotonic_calibrate(input_df, proba_name, label_name,
     Parameters
     ----------
     input_df : DataFrame
-        There are two columns of data frame, one is prediction probability, the other is label value.
+        There are two columns of data frame,
+        one is prediction probability, the other is label value.
 
     proba_name : str
         Prediction probability name.
@@ -39,7 +40,8 @@ def isotonic_calibrate(input_df, proba_name, label_name,
         Label name.
 
     is_poly : bool
-        Whether polynomial fitting is used for comparision with isotonic regression calibration results.
+        Whether polynomial fitting is used for
+        comparision with isotonic regression calibration results.
 
     fit_num : int
         The number of polynomial fitting.
@@ -57,7 +59,8 @@ def isotonic_calibrate(input_df, proba_name, label_name,
     Returns
     --------
     input_df : DataFrame
-        The calculation results of isotonic regression calibration (polynomial fitting results) are added.
+        The calculation results of isotonic
+        regression calibration (polynomial fitting results) are added.
 
     Examples
     ---------
@@ -159,7 +162,8 @@ def isotonic_calibrate(input_df, proba_name, label_name,
             temp = group_df[proba_name].median()
         elif bin_value_method == "mode":
 
-            # There may be multiple modes, and the first one is selected by default
+            # There may be multiple modes,
+            # and the first one is selected by default
             temp = group_df[proba_name].mode()[0]
         else:
             raise Exception("bin_value_method entered "
@@ -182,7 +186,8 @@ def isotonic_calibrate(input_df, proba_name, label_name,
     # to change bin value sort from small to large
     data_df.sort_values(by="bin_value", inplace=True)
 
-    # Training isotonic regression model, increasing=True means incremental fitting
+    # Training isotonic regression model,
+    # increasing=True means incremental fitting
     iso_reg = IsotonicRegression(increasing=True)
     iso_reg.fit(X=data_df["bin_value"], y=data_df["pos_ratio"])
 
@@ -216,7 +221,8 @@ def gaussian_calibrate(input_df, proba_name):
     Parameters
     ----------
     input_df : DataFrame
-        There are two columns of DataFrame, one is prediction probability, the other is label value.
+        There are two columns of DataFrame,
+        one is prediction probability, the other is label value.
 
     proba_name : str
         Prediction probability name.
@@ -224,7 +230,8 @@ def gaussian_calibrate(input_df, proba_name):
     Returns
     --------
     res : DataFrame
-        DataFrame composed of prediction probability and calibration probability.
+        DataFrame composed of prediction
+        probability and calibration probability.
 
     Examples
     ---------
@@ -257,7 +264,8 @@ def gaussian_calibrate(input_df, proba_name):
     150000      0  0.024276    0.409872
     """
 
-    # Generate standard normal distribution random numbers and sort them from small to large
+    # Generate standard normal distribution
+    # random numbers and sort them from small to large
     norm_rand = sorted(np.random.normal(0, 1, input_df.shape[0]))
 
     # Get the maximum and minimum values
@@ -272,7 +280,8 @@ def gaussian_calibrate(input_df, proba_name):
     # Increase the prediction probability of a gaussian calibaration
     input_df["gauss_pred"] = norm_stand
 
-    # Sort according to the row index to ensure that the input and output tags are in the same order
+    # Sort according to the row index to ensure
+    # that the input and output tags are in the same order
     input_df.sort_index(inplace=True)
 
     return input_df
@@ -284,7 +293,8 @@ def score_calibrate(input_df, proba_name, min_score=300, max_score=850):
     Parameters
     ----------
     input_df : DataFrame
-        There are two columns of DataFrame, one is prediction probability, the other is label value.
+        There are two columns of DataFrame, one is prediction
+        probability, the other is label value.
 
     proba_name : str
         Prediction probability name.

@@ -80,10 +80,12 @@ def tf_encode(input_path, filetype, feat_info_path="",
         The input file type.
 
     feat_info_path: str, default=""
-        The output path of feature information. he default is the path of the read in file.
+        The output path of feature information. The
+        default is the path of the read in file.
 
     output_path: str, default=""
-        The output path of the tfrecord file. The default is the path of the read in file.
+        The output path of the tfrecord file. The
+        default is the path of the read in file.
 
     index_col: int, default=None
         Which column of data is selected as the index.
@@ -124,7 +126,7 @@ def tf_encode(input_path, filetype, feat_info_path="",
         feat_li.pop(-1)
         feat_filename = "".join(feat_li) + "_featinfo.csv"
         input_li.append(feat_filename)
-        feat_path = "/".join(input_li)
+        feat_info_path = "/".join(input_li)
 
     # Specifies the read method according to the file type
     if filetype == "csv":
@@ -135,9 +137,11 @@ def tf_encode(input_path, filetype, feat_info_path="",
                                   engine="pyarrow")
         data_df.fillna("null", inplace=True)
     else:
-        raise Exception("The current file format does not support tfrecords conversion")
+        raise Exception("The current file format does "
+                        "not support tfrecords conversion")
 
-    # The tuple is composed of array to ensure that the later slice still retains the data format
+    # The tuple is composed of array to ensure that the
+    # later slice still retains the data format
     data_tuple = tuple([data_df[col].values for col in data_df.columns])
 
     # Cut the first dimension of array
@@ -179,7 +183,8 @@ def tf_decode(input_path, feat_info_path, output_type, output_path=""):
         The file type of the output file
 
     output_path: str
-        The path to save the output file. The default is the path to read in the file
+        The path to save the output file. The default
+        is the path to read in the file
 
     Returns
     ---------
@@ -192,10 +197,12 @@ def tf_decode(input_path, feat_info_path, output_type, output_path=""):
     >>> feat_info_path = "/path/to/x1_featinfo.csv"
     >>> output_path = "/path/to/y1.csv"
     >>> mag_transfrom.tf_decode(input_path, feat_info_path, output_path, "csv")
+
     >>> input_path2 = "/path/to/x2.tfrecord"
     >>> feat_info_path2 = "/path/to/x2_featinfo.csv"
     >>> output_path2 = "/path/to/y2.parquet"
-    >>> mag_transfrom.tf_decode(input_path, feat_info_path, output_path, "parquet")
+    >>> mag_transfrom.tf_decode(input_path, feat_info_path,
+    ... output_path, "parquet")
     """
 
     feat_df = pd.read_csv(feat_info_path)
@@ -214,7 +221,8 @@ def tf_decode(input_path, feat_info_path, output_type, output_path=""):
 
     feats_len = len(feat_types)
 
-    # If the export path is empty, the specified format file is created in the input path by default
+    # If the export path is empty, the specified format
+    # file is created in the input path by default
     if len(output_path) == 0:
         input_li = input_path.split("/")
         csv_name = input_li.pop(-1)
@@ -237,17 +245,20 @@ def tf_decode(input_path, feat_info_path, output_type, output_path=""):
     for i in range(feats_len):
         columns.append("feature_" + str(i))
 
-    # If the feature type is not specified, the list of feature types is constructed according to string
+    # If the feature type is not specified, the list of feature
+    # types is constructed according to string
     if len(feat_types) == 0:
         feat_types = [tf.string] * feats_len
 
-    # Create feature description dictionary {feature Name: (feature size, feature type)}
+    # Create feature description dictionary {feature Name:
+    # (feature size, feature type)}
     feature_description = {}
     for column, feat_type in zip(columns, feat_types):
         feature_description[column] = tf.io.FixedLenFeature([1], feat_type)
 
     # Use the above feature description dictionary to parse the
-    # tf.Data.Examples and parse the serialized tf.Data.Examples into a normal string
+    # tf.Data.Examples and parse the serialized
+    # tf.Data.Examples into a normal string
     def _parse_function(example_proto):
         return tf.io.parse_single_example(example_proto, feature_description)
 
@@ -264,9 +275,9 @@ def tf_decode(input_path, feat_info_path, output_type, output_path=""):
         total_row.append(new_row)
     res_df = pd.DataFrame(total_row, columns=feat_names)
 
-    # If the feature name is not specified, the default is `feature_xxx` designated
+    # If the feature name is not specified, the
+    # default is `feature_xxx` designated
     res_df.columns = feat_names
-
     if output_type == "csv":
         res_df.to_csv(output_path, index=False)
     elif output_type == "parquet":

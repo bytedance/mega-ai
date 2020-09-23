@@ -23,6 +23,6 @@ if __name__ == "__main__":
     # 将tf-record格式编码成csv文件并保存, 并且将csv第一列作为索引
     mag_transform.tf_decode(input_path, feat_info_path, "csv", output_path)
 
-    # df = pd.read_parquet("../../../data/ccc.parquet")
+    df = pd.read_parquet("../../../data/ccc.parquet")
     # print(df.shape)
     # print(df.head(5))
