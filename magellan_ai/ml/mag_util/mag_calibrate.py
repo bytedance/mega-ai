@@ -30,8 +30,8 @@ def isotonic_calibrate(input_df, proba_name, label_name,
     Parameters
     ----------
     input_df : DataFrame
-        There are two columns of data frame,
-        one is prediction probability, the other is label value.
+        There are two columns of data frame, one is prediction
+        probability, the other is label value.
 
     proba_name : str
         Prediction probability name.
@@ -40,8 +40,8 @@ def isotonic_calibrate(input_df, proba_name, label_name,
         Label name.
 
     is_poly : bool
-        Whether polynomial fitting is used for
-        comparision with isotonic regression calibration results.
+        Whether polynomial fitting is used for comparision
+        with isotonic regression calibration results.
 
     fit_num : int
         The number of polynomial fitting.
@@ -59,8 +59,8 @@ def isotonic_calibrate(input_df, proba_name, label_name,
     Returns
     --------
     input_df : DataFrame
-        The calculation results of isotonic
-        regression calibration (polynomial fitting results) are added.
+        The calculation results of isotonic regression calibration
+        (polynomial fitting results) are added.
 
     Examples
     ---------
@@ -221,8 +221,8 @@ def gaussian_calibrate(input_df, proba_name):
     Parameters
     ----------
     input_df : DataFrame
-        There are two columns of DataFrame,
-        one is prediction probability, the other is label value.
+        There are two columns of DataFrame, one is prediction
+        probability, the other is label value.
 
     proba_name : str
         Prediction probability name.
@@ -230,8 +230,8 @@ def gaussian_calibrate(input_df, proba_name):
     Returns
     --------
     res : DataFrame
-        DataFrame composed of prediction
-        probability and calibration probability.
+        DataFrame composed of prediction probability
+        and calibration probability.
 
     Examples
     ---------
