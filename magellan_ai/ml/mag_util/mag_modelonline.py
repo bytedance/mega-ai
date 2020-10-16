@@ -9,6 +9,7 @@ import json
 def show_func():
     print("+-------------------------------+")
     print("|model online tools             |")
+    print("+-------------------------------+")
     print("|1.dump_feats_json              |")
     print("|2.clean_table                  |")
     print("|3.get_feats_map                |")
@@ -16,7 +17,7 @@ def show_func():
 
 
 def dump_feats_json(model_name, feat_names, feat_path):
-    """Calculate KS.
+    """Save the feature file as JSON.
 
     Parameters
     ----------
@@ -151,6 +152,8 @@ def get_feats_map(input_path, feat_names, wrong_sheets, output_path):
     Examples
     ----------
     >>> intput_path = "path/to/sample/yyy.xlsx"
+    >>> feat_names = ["aaa", "bbb", "ccc"]
+    >>> wrong_sheets = ["ddd", "eee", "fff"]
     >>> output_path = "path/to/sample/zzz.txt"
     >>> clean_table(intput_path, output_path)
 
