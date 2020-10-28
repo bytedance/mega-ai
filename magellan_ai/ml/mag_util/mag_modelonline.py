@@ -77,7 +77,7 @@ def clean_table(intput_path, output_path):
     Examples
     ----------
     >>> intput_path = "path/to/sample/xxx.xlsx"
-    >>> output_path = ["aaa", "bbb", "ccc"]
+    >>> output_path = "path/to/sample/yyy.xlsx"
     >>> clean_table(intput_path, output_path)
 
     Notes
@@ -188,11 +188,16 @@ def get_feats_map(input_path, feat_names, wrong_sheets, output_path):
 
     # Remove all unavailable sheets
     for key, tmp_df in data_dict.items():
+
+        if "组名" not in tmp_df.columns or "hive字段名 / kafka 字段名" not in tmp_df.columns or "画像特征名" not in tmp_df.columns:
+            print("current sheet: {} has incomplete information，skip current sheet".format(key))
+            continue
+
         if key not in wrong_sheets:
             find_group_feat(tmp_df)
 
     unmatched, count = [], 0
-    res_map_str = "Map("
+    res_map_str = "map("
     for index, feat in enumerate(feat_names):
         if res[index][0] == "zero":
             unmatched.append(feat)
@@ -202,12 +207,12 @@ def get_feats_map(input_path, feat_names, wrong_sheets, output_path):
                 "The length of profile group name " \
                 "or profile feature name cannot be 0"
             cur_groupname = res[index][0].strip("\n")
-            res_map_str = res_map_str + "\"%s\", MapGet($%s, \"%s\") " % (
+            res_map_str = res_map_str + "\"%s\", MapGet($%s, \"%s\"), " % (
                 feat, cur_groupname, res[index][1])
 
     assert count == 0, "There is a hive feature whose " \
                        "profile group name is not found"
-    schema = res_map_str[:-1] + ")"
+    schema = res_map_str[:-2] + ")"
 
     # Save mapping results
     with open(output_path, "w") as f:
