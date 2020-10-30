@@ -68,7 +68,7 @@ def main(_):
     x_valid, x_train = train_images[:10000], train_images[10000:]
     y_valid, y_train = train_labels[:10000], train_labels[10000:]
 
-    model.fit(x_train, y_train, epochs=FLAGS.training_iteration, batch_size=100,
+    model.fit(x_train, y_train, epochs=FLAGS.training_iteration, batch_size=FLAGS.batch_size,
               validation_data=(x_valid, y_valid), verbose=1)
 
     # 结尾增加softmax层, 使得输出为为概率
@@ -87,25 +87,12 @@ def main(_):
     print("查看输出信息")
     print(prob_model.output)
 
-    # signature = tf.compat.v1.saved_model.signature_def_utils.predict_signature_def(
-    #     inputs={'image': model.input}, outputs={'scores': model.output})
-    #
-    # builder = tf.compat.v1.saved_model.builder.SavedModelBuilder(export_path)
-    # legacy_init_op = tf.group(tf.compat.v1.tables_initializer(), name='legacy_init_op')
-    # builder.add_meta_graph_and_variables(
-    #     sess=tf.compat.v1.keras.backend.get_session(),
-    #     tags=[tf.compat.v1.saved_model.tag_constants.SERVING],
-    #     signature_def_map={
-    #         'image_classification': signature,
-    #     },
-    #     legacy_init_op=legacy_init_op)
-    # builder.save()
-
-    # # 模型保存
+    # 模型保存
     prob_model.save(export_path)
 
 
 if __name__ == "__main__":
 
-    # run方法找当前模块下的main函数，并且传入一个参数, 如果把main中的下划线去掉，就表示这个main函数是不带参数的，所以会报错
+    # run方法找当前模块下的main函数，并且传入一个参数,
+    # 如果把main中的下划线去掉，就表示这个main函数是不带参数的，所以会报错
     tf.compat.v1.app.run()

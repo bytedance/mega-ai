@@ -39,8 +39,7 @@ def cal_accuracy(hostport, input_path, concurrency, num_tests):
     # 建立请求
     request = predict_pb2.PredictRequest()
     request.model_spec.name = 'default'
-    # request.model_spec.signature_name = 'serving_default'
-    request.model_spec.signature_name = 'predict_images'
+    request.model_spec.signature_name = 'serving_default'
 
     # 统计预测值和真实值相等的个数
     same_count = 0
@@ -48,11 +47,11 @@ def cal_accuracy(hostport, input_path, concurrency, num_tests):
         test_image = np.expand_dims(test_images[i], 0)
         cur_test_image = test_image/225.0
         cur_test_image = cur_test_image.astype(np.float32)
-        request.inputs["images"].CopyFrom(
+        request.inputs["sequential_input"].CopyFrom(
             tf.make_tensor_proto(cur_test_image, shape=list(cur_test_image.shape)))
 
         # 发送预测请求，将10秒设置为超时请求
-        result = stub.Predict(request, 5.0)
+        result = stub.Predict(request, 3.0)
         pred, test_label = np.argmax(result.outputs["softmax"].float_val), test_labels[i]
         same_count = same_count + 1 if pred == test_label else same_count
         print("\r已完成{:.2%}".format((i+1)/num_tests), end="")
