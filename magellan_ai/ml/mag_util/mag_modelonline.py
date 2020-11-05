@@ -193,8 +193,7 @@ def get_feats_map(input_path, feat_names, wrong_sheets, output_path):
             print("current sheet: {} has incomplete information，skip current sheet".format(key))
             continue
 
-        if key not in wrong_sheets:
-            find_group_feat(tmp_df)
+        find_group_feat(tmp_df)
 
     unmatched, count = [], 0
     res_map_str = "map("
