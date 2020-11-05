@@ -185,8 +185,10 @@ def get_feats_map(input_path, feat_names, output_path):
     # Remove all unavailable sheets
     for key, tmp_df in data_dict.items():
 
-        if "组名" not in tmp_df.columns or "hive字段名 / kafka 字段名" not in tmp_df.columns or "画像特征名" not in tmp_df.columns:
-            print("current sheet: {} has incomplete information，skip current sheet".format(key))
+        if "组名" not in tmp_df.columns or "hive字段名 / kafka 字段名" \
+                not in tmp_df.columns or "画像特征名" not in tmp_df.columns:
+            print("current sheet: {} has incomplete "
+                  "information，skip current sheet".format(key))
             continue
 
         find_group_feat(tmp_df)
