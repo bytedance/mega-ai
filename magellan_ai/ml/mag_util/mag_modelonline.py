@@ -128,7 +128,7 @@ def clean_table(intput_path, output_path):
     workbook.save(output_path)
 
 
-def get_feats_map(input_path, feat_names, wrong_sheets, output_path):
+def get_feats_map(input_path, feat_names, output_path):
     """Save the profile schema of decision platform
 
     Parameters
@@ -138,9 +138,6 @@ def get_feats_map(input_path, feat_names, wrong_sheets, output_path):
 
     feat_names: list
         The hive feature name used in the model
-
-    wrong_sheets : list
-        Dirty sheets of excel not to be dealt with
 
     output_path : str
         The path to save Schema infos on decision platform
@@ -153,7 +150,6 @@ def get_feats_map(input_path, feat_names, wrong_sheets, output_path):
     ----------
     >>> intput_path = "path/to/sample/yyy.xlsx"
     >>> feat_names = ["aaa", "bbb", "ccc"]
-    >>> wrong_sheets = ["ddd", "eee", "fff"]
     >>> output_path = "path/to/sample/zzz.txt"
     >>> clean_table(intput_path, output_path)
 
