@@ -194,6 +194,8 @@ def main(_):
         print("请指定服务的IP和端口号")
         sys.exit(-1)
 
+    print(sys.argv)
+
     # 计算准确率
     accuracy_rate = cal_accuracy(FLAGS.server, FLAGS.input_data_path, FLAGS.concurrency, FLAGS.num_tests)
     print('\n准确率的计算结果为:{:.2%}'.format(accuracy_rate))
