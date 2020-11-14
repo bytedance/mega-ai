@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import openpyxl
 import json
+import sys
 
 
 def show_func():
@@ -41,7 +42,7 @@ def dump_feats_json(model_name, feat_names, feat_path):
     >>> feat_path = "path/to/sample/xxx.json"
     >>> feat_names = ["aaa", "bbb", "ccc"]
     >>> model_name = "templete_model.bin"
-    >>> dump_feats_json(model_name, feat_names, feat_path)
+    >>> export_feats_json(model_name, feat_names, feat_path)
 
     Notes
     -----
@@ -58,13 +59,13 @@ def dump_feats_json(model_name, feat_names, feat_path):
                   indent=4, ensure_ascii=False)
 
 
-def clean_table(intput_path, output_path):
+def clean_table(input_path, output_path):
     """Split the merged cells, and make sure that each row after
     splitting is the same as the value of the original cell.
 
     Parameters
     ----------
-    intput_path : str
+    input_path : str
         Merge_cells excel path to be processed
 
     output_path : str
@@ -87,7 +88,7 @@ def clean_table(intput_path, output_path):
 
     # data_only=True indicates that if the cell contains a calculation
     # formula, only the calculation result is read
-    workbook = openpyxl.load_workbook(intput_path, data_only=True)
+    workbook = openpyxl.load_workbook(input_path, data_only=True)
     name_list = workbook.sheetnames
 
     # Traverse all sheets of Excel
@@ -128,7 +129,8 @@ def clean_table(intput_path, output_path):
     workbook.save(output_path)
 
 
-def get_feats_map(input_path, feat_names, output_path):
+def export_feats_map(input_path, feat_names,
+                     output_path, convert_type="v1_map_get"):
     """Save the profile schema of decision platform
 
     Parameters
@@ -142,16 +144,21 @@ def get_feats_map(input_path, feat_names, output_path):
     output_path : str
         The path to save Schema infos on decision platform
 
+    convert_type : {"v1_map_get", "v2_feat_group", "v2_make_json"}
+        Save feature information in the specified format
+
+
     Returns
     --------
     None
 
     Examples
     ----------
-    >>> intput_path = "path/to/sample/yyy.xlsx"
-    >>> feat_names = ["aaa", "bbb", "ccc"]
-    >>> output_path = "path/to/sample/zzz.txt"
-    >>> clean_table(intput_path, output_path)
+    >>> in_path = "path/to/sample/yyy.xlsx"
+    >>> feat_list = ["aaa", "bbb", "ccc"]
+    >>> out_path = "path/to/sample/zzz.txt"
+    >>> conv_type = "v1_map_get"
+    >>> export_feats_map(in_path, feat_list, out_path, conv_type)
 
     Notes
     -----
@@ -164,23 +171,33 @@ def get_feats_map(input_path, feat_names, output_path):
 
     # Add the porfile group name and the porfile feature name to res
     def find_group_feat(data_df):
-        for index, row in data_df.iterrows():
+        for row_index, row in data_df.iterrows():
 
-            # Get the hive feature name, porfile group name and
-            # porfile feature name of the current line
-            hive_feature_name = row["hive字段名 / kafka 字段名"] \
-                if row["hive字段名 / kafka 字段名"] is not np.nan else ""
-            profile_group_name = row["组名"] if row["组名"] is not np.nan else ""
+            # Get the profile group name, profile feature name
+            # and hive feature name, of the current line
+            if row["组名"] is np.nan or row["hive字段名 / kafka 字段名"] is np.nan:
+                continue
+            else:
+                profile_group_name = row["组名"]
+                hive_feature_name = row["hive字段名 / kafka 字段名"]
+
             profile_feature_name = row["画像特征名"] if \
-                row["画像特征名"] is not np.nan else "xxx"
+                row["画像特征名"] is not np.nan else ""
 
             # Traverse the hive feature name to match
-            for i, colname in enumerate(feat_names):
+            for i, col_name in enumerate(feat_names):
                 if marked[i] == 1:
                     continue
-                if colname == hive_feature_name:
+                if col_name == hive_feature_name:
                     marked[i] = 1
-                    res[i] = (profile_group_name, profile_feature_name)
+                    if len(profile_feature_name) == 0:
+                        res[i] = (profile_group_name, hive_feature_name)
+                        print("The current profile feature name does "
+                              "not exist, use current hive feature "
+                              "name <{}> instead"
+                              .format(hive_feature_name))
+                    else:
+                        res[i] = (profile_group_name, profile_feature_name)
 
     # Remove all unavailable sheets
     for key, tmp_df in data_dict.items():
@@ -193,24 +210,70 @@ def get_feats_map(input_path, feat_names, output_path):
 
         find_group_feat(tmp_df)
 
-    unmatched, count = [], 0
-    res_map_str = "map("
-    for index, feat in enumerate(feat_names):
-        if res[index][0] == "zero":
-            unmatched.append(feat)
-            count += 1
-        else:
+    if convert_type == "v1_map_get":
+        #  Save feats info as map(hiveFeatsName,
+        #  MapGet($profileGroupName, profileFeatsName), ...
+        res_str = "map("
+        for index, feat in enumerate(feat_names):
+            assert res[index][0] != "zero", "current hive feature:{}" \
+                                            "'s profile group name " \
+                                            "is not found".format(feat)
             assert len(res[index][0]) != 0 and len(res[index][1]) != 0, \
-                "The length of profile group name " \
-                "or profile feature name cannot be 0"
-            cur_groupname = res[index][0].strip("\n")
-            res_map_str = res_map_str + "\"%s\", MapGet($%s, \"%s\"), " % (
-                feat, cur_groupname, res[index][1])
+                "The length of profile group name or " \
+                "profile feature name cannot be 0"
+            cur_group_name = res[index][0].strip("\n")
+            res_str += "\"%s\", MapGet($%s, \"%s\"), " \
+                       % (feat, cur_group_name, res[index][1])
 
-    assert count == 0, "There is a hive feature whose " \
-                       "profile group name is not found"
-    schema = res_map_str[:-2] + ")"
+        schema = res_str[:-2] + ")"
+        with open(output_path, "w") as f:
+            f.write(schema)
 
-    # Save mapping results
-    with open(output_path, "w") as f:
-        f.write(schema)
+    elif convert_type == "v2_feat_group":
+        #  Save feats info as profileName__profileGroupName\n, ...
+        res_str = ""
+        for index, feat in enumerate(feat_names):
+            assert res[index][0] != "zero", \
+                "current hive feature:{}'s " \
+                "profile group name is not found".format(feat)
+            assert len(res[index][0]) != 0 and len(res[index][1]) != 0, \
+                "The length of profile group name or " \
+                "profile feature name cannot be 0"
+            cur_group_name = res[index][0].strip("\n")
+            res_str += cur_group_name + "__%s\n" % (res[index][1])
+
+        schema = res_str[:-1] + ""
+        with open(output_path, "w") as f:
+            f.write(schema)
+
+    elif convert_type == "v2_make_json":
+
+        # Save feats info as caijing_dmp.make_json(
+        # "profile_feat_name", hive_feat_name, ...)
+        xql_make_json = {}
+        for index, feat in enumerate(feat_names):
+            assert res[index][0] != "zero", \
+                "current hive feature:{}'s " \
+                "profile group name is not found".format(feat)
+            assert len(res[index][0]) != 0 and len(res[index][1]) != 0, \
+                "The length of profile group name or profile " \
+                "feature name cannot be 0"
+            cur_group_name = res[index][0].strip("\n")
+            xql_make_json[cur_group_name] = \
+                xql_make_json[cur_group_name] + \
+                "\"%s\",%s," % (res[index][1], feat) \
+                if xql_make_json.get(cur_group_name) is not None else \
+                "caijing_dmp.make_json(\"%s\",%s," % (res[index][1], feat)
+
+        # Save the current dictionary according to each key
+        for key, value in xql_make_json.items():
+            new_output_path = "/".join(
+                output_path.split("/")[:-1]) + "/" + key + "_makejson.txt"
+            print(new_output_path)
+            value = value[:-1] + ")"
+            with open(new_output_path, "w") as f:
+                f.write(value)
+
+    else:
+        print("Sorry! The current convert_type is not supported")
+        sys.exit(0)

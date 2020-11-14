@@ -1,15 +1,14 @@
 # coding: utf-8
 from __future__ import absolute_import, division, \
     print_function, unicode_literals
-import pandas as pd
-from magellan_ai.ml.mag_util import mag_metrics
-from magellan_ai.ml.mag_util import mag_modelonline
+from magellan_ai.ml.mag_util import mag_metrics, mag_online
 from sklearn.linear_model import LogisticRegression
+import pandas as pd
 
 if __name__ == "__main__":
 
-    # # show doc string
-    # print(help(mag_metrics))
+    # show doc string
+    print(help(mag_metrics))
 
     # # Function visualization
     # mag_metrics.show_func()
@@ -18,16 +17,16 @@ if __name__ == "__main__":
 
     # load data test
     # data_df = pd.read_csv("../../../data/cs-training.csv", index_col=0)
-    data_df = pd.read_csv("../../../data/titanic/train.csv")
+    # data_df = pd.read_csv("../../../data/titanic/train.csv")
+    #
+    # # calculate IV and coverage
+    # print(mag_metrics.cal_iv(data_df, "Survived", bin_method="same_frequency"))
+    # print(mag_metrics.cal_feature_coverage(data_df))
+    # data_df.fillna(0, inplace=True)
 
-    # calculate IV and coverage
-    print(mag_metrics.cal_iv(data_df, "Survived", bin_method="same_frequency"))
-    print(mag_metrics.cal_feature_coverage(data_df))
-    data_df.fillna(0, inplace=True)
-
-    # model training test
-    X, y = data_df.iloc[:, 1:], data_df["Survived"]
-    lr = LogisticRegression(penalty="l2", max_iter=1000, random_state=99)
+    # # model training test
+    # X, y = data_df.iloc[:, 1:], data_df["Survived"]
+    # lr = LogisticRegression(penalty="l2", max_iter=1000, random_state=99)
     # X.fillna(0, inplace=True)
     # lr.fit(X, y)
     # y_proba = lr.predict_proba(X)[:, 1]
@@ -39,24 +38,20 @@ if __name__ == "__main__":
     #     is_poly=True, bin_method="chi_square", bin_value_method="mean")
     # res = score_calibrate(test_df, proba_name="proba")
     # res = gaussian_calibrate(test_df, "proba")
+
+    # mag_online test case
+    # input_path = "../../../data/caijing_profile_clean.xlsx"
+    # origin_path = "../../../data/财经用户画像数据需求文档.xlsx"
+    # feat_path = "../../../data/feat_json_format.json"
+    # output_path = "../../../data/make_json.txt"
+    # model_name = "templete_model.bin"
     #
-    # print(res)
+    # with open("../../../data/feats_list.txt") as f:
+    #     feats_list = f.read().split("\n")
 
-    # feat_path = "./featinfo.json"
-    # feat_names = ["aaa", "bbb", "ccc"]
-    # model_name = "hhh.bin"
-    # dump_feats_json(model_name, feat_names, feat_path)
-
-    # input_path = "../../../data/财经用户画像数据需求文档.xlsx"
-    # output_path = "../../../data/caijing_profile_clean.xlsx"
-    # clean_table(input_path, output_path)
-
-    input_path = "../../../data/caijing_profile_clean.xlsx"
-    output_path = "../../../data/schema_infos.txt"
-    feat_names = ['account_stability_score_min', 'device_days_max',
-                  'device_days_avg', 'device_count_avg',
-                  'device_days_min', 'device_count_min',
-                  'account_stability_score_max', 'device_count_max',
-                  'account_stability_score_avg']
-
-    mag_modelonline.get_feats_map(input_path, feat_names, output_path)
+    # mag_online.clean_table(origin_path, input_path)
+    # mag_online.dump_feats_json(model_name, feats_list, feat_path)
+    # mag_online.export_feats_map(input_path, feats_list, output_path, convert_type="v1_map_get")
+    # mag_online.export_feats_map(input_path, feats_list, output_path, convert_type="v2_feat_group")
+    # mag_online.export_feats_map(input_path, feats_list, output_path, convert_type="v2_make_json")
+    # mag_online.export_feats_map(input_path, feats_list, output_path, convert_type="v3_json")
