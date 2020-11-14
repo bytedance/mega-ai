@@ -13,7 +13,7 @@ def show_func():
     print("+-------------------------------+")
     print("|1.dump_feats_json              |")
     print("|2.clean_table                  |")
-    print("|3.get_feats_map                |")
+    print("|3.export_feats_map             |")
     print("+-------------------------------+")
 
 
@@ -23,13 +23,13 @@ def dump_feats_json(model_name, feat_names, feat_path):
     Parameters
     ----------
     model_name : str
-        Model bin file name
+        Model bin file name.
 
     feat_names : list
-        Feature list name
+        Feature list name.
 
     feat_path : str
-        The path to save features file
+        The path to save features file.
 
 
     Returns
@@ -66,10 +66,10 @@ def clean_table(input_path, output_path):
     Parameters
     ----------
     input_path : str
-        Merge_cells excel path to be processed
+        Merge_cells excel path to be processed.
 
     output_path : str
-        Unmerge_cells excel path to be saved
+        Unmerge_cells excel path to be saved.
 
     Returns
     --------
@@ -136,16 +136,16 @@ def export_feats_map(input_path, feat_names,
     Parameters
     ----------
     input_path : str
-        Excel path to traverse
+        Excel path to traverse.
 
     feat_names: list
-        The hive feature name used in the model
+        The hive feature name used in the model.
 
     output_path : str
-        The path to save Schema infos on decision platform
+        The path to save Schema infos on decision platform.
 
-    convert_type : {"v1_map_get", "v2_feat_group", "v2_make_json"}
-        Save feature information in the specified format
+    convert_type : {'v1_map_get', 'v2_feat_group', "v2_make_json"}, default='v1_map_get'
+        Save feature information in the specified format.
 
 
     Returns
