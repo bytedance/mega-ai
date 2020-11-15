@@ -269,7 +269,6 @@ def export_feats_map(input_path, feat_names,
         for key, value in xql_make_json.items():
             new_output_path = "/".join(
                 output_path.split("/")[:-1]) + "/" + key + "_makejson.txt"
-            print(new_output_path)
             value = value[:-1] + ")"
             with open(new_output_path, "w") as f:
                 f.write(value)
