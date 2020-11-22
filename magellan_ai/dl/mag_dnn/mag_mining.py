@@ -241,8 +241,8 @@ class DeepFM:
 
     def fit_on_batch(self, x_index, x_value, y):
 
-        feed_dict = {self.feat_index: np.reshape(x_index, (-1, 482)),
-                     self.feat_value: np.reshape(x_value, (-1, 482)),
+        feed_dict = {self.feat_index: np.reshape(x_index, (-1, self.field_size)),
+                     self.feat_value: np.reshape(x_value, (-1, self.field_size)),
                      self.label: np.reshape(y, (-1, 1))}
         loss, opt = self.sess.run(
             [self.loss, self.optimizer], feed_dict=feed_dict)
