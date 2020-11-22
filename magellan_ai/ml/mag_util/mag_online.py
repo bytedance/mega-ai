@@ -144,7 +144,8 @@ def export_feats_map(input_path, feat_names,
     output_path : str
         The path to save Schema infos on decision platform.
 
-    convert_type : {'v1_map_get', 'v2_feat_group', "v2_make_json"}, default='v1_map_get'
+    convert_type : {'v1_map_get', 'v2_feat_group', "v2_make_json"},
+                   default='v1_map_get'
         Save feature information in the specified format.
 
 
