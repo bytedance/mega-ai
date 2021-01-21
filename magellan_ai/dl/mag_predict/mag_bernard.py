@@ -123,8 +123,7 @@ def bernard_predict(x, hosts, input_name, output_name,
                                  shape=list(cur_test_image.shape)))
 
         res = stub.Predict(req, 3.0)
-        pred_li.append((res.outputs[output_name].float_val[0],
-                        res.outputs[output_name].float_val[1]))
+        pred_li.append(res.outputs[output_name].float_val[0])
         print("\rcalculation completed {:.2%}".format((i+1)/num_tests), end="")
 
-    return pd.DataFrame(pred_li, columns=["prob_0", "prob_1"])
+    return pd.DataFrame(pred_li, columns=["prob"])

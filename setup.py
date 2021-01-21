@@ -8,7 +8,7 @@ import os
 # Package meta information
 NAME = 'magellan-ai'
 DESCRIPTION = 'Some computing tools with machine learning'
-AUTHOR = 'huangning'
+AUTHOR = 'huang ning'
 
 # The dependent version required for the project to run
 REQUIRES = ["numpy>=1.16.0,<1.19.1",
@@ -19,7 +19,6 @@ REQUIRES = ["numpy>=1.16.0,<1.19.1",
             "pyarrow>=1.0.0, <2.0.0",
             "openpyxl>=3.0.0, <4.0.0",
             "xlrd>=1.0.0, <2.0.0",
-            "grpc>=1.32.0, <2.0.0",
             "keras>=2.4.3, <3.0.0"
             ]
 
@@ -33,7 +32,7 @@ except IOError:
 
 setup(
       name='byted-'+NAME,
-      version='1.3.2',
+      version='1.4.2',
       description=DESCRIPTION,
       long_description=long_description,
       long_description_content_type="text/markdown",
