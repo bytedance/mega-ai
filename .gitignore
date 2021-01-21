@@ -5,12 +5,12 @@ data/*
 models/*
 dist/*
 
-.pytest_cache/*
-__pycache__/*
-.vscode/*
-.DS_Store
-dataset/*
 venv/*
+.DS_Store
+.vscode/*
+dataset/*
+__pycache__/*
+.pytest_cache/*
 
 magellan_ai/.DS_Store
 magellan_ai/__pycache__/*

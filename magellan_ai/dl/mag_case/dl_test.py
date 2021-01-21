@@ -30,8 +30,8 @@ if __name__ == "__main__":
     model_signature_name = "serving_default"
     # mag_bernard.tf_saved_model(X_train, X_valid, y_train, y_valid,
     #                            model_path, model_version)
-    mag_bernard.predict(X_train, hosts, input_name, output_name,
-                        model_name, model_signature_name, 1000)
+    mag_bernard.bernard_predict(X_train, hosts, input_name, output_name,
+                                model_name, model_signature_name, 1000)
 
     # ----------------------------------------------------
     # deepFM module test code

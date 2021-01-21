@@ -14,6 +14,33 @@ import os
 
 def tf_saved_model(x_train, x_valid, y_train, y_valid,
                    model_path, model_version=1):
+    """save tensorflow model.
+
+    Parameters
+    ----------
+    x_train : DataFrame
+        Train feature set
+
+    x_valid : str
+        Validation feature set
+
+    y_train : str
+        Training label set
+
+    y_valid :
+        Validation label set
+
+    model_path : string
+        Model save path
+
+    model_version : int
+        The version information of the model
+
+    Examples
+    ---------
+    >>> mag_bernard.tf_saved_model(x_train, x_valid,
+    ... y_train, y_valid, model_path, model_version)
+    """
 
     tf_clf = keras.Sequential()
     tf_clf.add(keras.layers.Dense(units=16,
@@ -31,15 +58,51 @@ def tf_saved_model(x_train, x_valid, y_train, y_valid,
                batch_size=1000,
                epochs=100,
                validation_data=(x_valid.values, y_valid.values),
-               verbose=1)
+               verbose=0)
 
     export_path = os.path.join(tf.compat.as_bytes(model_path),
                                tf.compat.as_bytes(str(model_version)))
     tf_clf.save(export_path)
 
 
-def predict(x, hosts, input_name, output_name, model_name,
-            model_signature_name, num_tests=1000):
+def bernard_predict(x, hosts, input_name, output_name,
+                    model_name, model_signature_name, num_tests=1000):
+    """call bernard server model.
+
+    Parameters
+    ----------
+    x : DataFrame
+        Test feature set
+
+    hosts : str
+        Bernard server's hosts
+
+    input_name : str
+        input data name
+
+    output_name : string
+        output data name
+
+    model_name : str
+        model name
+
+    model_signature_name: str
+        model signature name
+
+    num_tests: int
+        Number of samples to be tested
+
+
+    Returns
+    --------
+    res : DataFrame
+        Model prediction results
+
+    Examples
+    ---------
+    >>> mag_bernard.bernard_predict(x, hosts, input_name, output_name,
+    ... model_name, model_signature_name, 1000)
+    """
 
     test_images = x.values
 

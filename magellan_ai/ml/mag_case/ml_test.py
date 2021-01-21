@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # load data test
     # data_df = pd.read_csv("../../../data/cs-training.csv", index_col=0)
     # data_df = pd.read_csv("../../../data/titanic/train.csv")
-    #
+
     # # calculate IV and coverage
     # print(mag_metrics.cal_iv(data_df, "Survived",
     #                          bin_method="same_frequency"))
