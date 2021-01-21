@@ -5,12 +5,12 @@ from setuptools import find_packages, setup
 import io
 import os
 
-# 包元信息
+# Package meta information
 NAME = 'magellan-ai'
 DESCRIPTION = 'Some computing tools with machine learning'
 AUTHOR = 'huangning'
 
-# 项目运行需要的依赖
+# The dependent version required for the project to run
 REQUIRES = ["numpy>=1.16.0,<1.19.1",
             "pandas>=1.0.4,<1.2.0",
             "scikit-learn>=0.21.3,<0.23.1",
@@ -18,7 +18,9 @@ REQUIRES = ["numpy>=1.16.0,<1.19.1",
             "tensorflow>=2.0.0,<2.4.0",
             "pyarrow>=1.0.0, <2.0.0",
             "openpyxl>=3.0.0, <4.0.0",
-            "xlrd>=1.0.0, <2.0.0"
+            "xlrd>=1.0.0, <2.0.0",
+            "grpc>=1.32.0, <2.0.0",
+            "keras>=2.4.3, <3.0.0"
             ]
 
 here = os.path.abspath(os.path.dirname(__file__))

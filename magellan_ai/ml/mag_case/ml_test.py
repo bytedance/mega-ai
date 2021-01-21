@@ -2,12 +2,8 @@
 from __future__ import absolute_import, division, \
     print_function, unicode_literals
 from magellan_ai.ml.mag_util import mag_metrics
-from magellan_ai.dl.mag_dnn.mag_mining import DeepFM
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_auc_score
 
 import warnings
-import pandas as pd
 warnings.filterwarnings("ignore")
 
 if __name__ == "__main__":
@@ -25,7 +21,8 @@ if __name__ == "__main__":
     # data_df = pd.read_csv("../../../data/titanic/train.csv")
     #
     # # calculate IV and coverage
-    # print(mag_metrics.cal_iv(data_df, "Survived", bin_method="same_frequency"))
+    # print(mag_metrics.cal_iv(data_df, "Survived",
+    #                          bin_method="same_frequency"))
     # print(mag_metrics.cal_feature_coverage(data_df))
     # data_df.fillna(0, inplace=True)
 
@@ -56,7 +53,11 @@ if __name__ == "__main__":
 
     # mag_online.clean_table(origin_path, input_path)
     # mag_online.dump_feats_json(model_name, feats_list, feat_path)
-    # mag_online.export_feats_map(input_path, feats_list, output_path, convert_type="v1_map_get")
-    # mag_online.export_feats_map(input_path, feats_list, output_path, convert_type="v2_feat_group")
-    # mag_online.export_feats_map(input_path, feats_list, output_path, convert_type="v2_make_json")
-    # mag_online.export_feats_map(input_path, feats_list, output_path, convert_type="v3_json")
+    # mag_online.export_feats_map(input_path, feats_list,
+    #                             output_path, convert_type="v1_map_get")
+    # mag_online.export_feats_map(input_path, feats_list,
+    #                             output_path, convert_type="v2_feat_group")
+    # mag_online.export_feats_map(input_path, feats_list,
+    #                             output_path, convert_type="v2_make_json")
+    # mag_online.export_feats_map(input_path, feats_list,
+    #                             output_path, convert_type="v3_json")

@@ -2,16 +2,14 @@
 build/*
 byted_magellan_ai.egg-info/*
 data/*
+models/*
 dist/*
 
 .pytest_cache/*
-.vscode/*
 __pycache__/*
-
+.vscode/*
 .DS_Store
-
 dataset/*
-
 venv/*
 
 magellan_ai/.DS_Store
@@ -22,9 +20,7 @@ magellan_ai/ml/__pycache__/*
 magellan_ai/ml/mag_util/.DS_Store
 magellan_ai/ml/mag_util/__pycache__/*
 magellan_ai/ml/mag_case/__pycache__/*
-magellan_ai/ml/mag_bernard/*
-magellan_ai/ml/mag_bernard/__pycache__/*
-magellan_ai/ml/mag_bernard/tradition_mnist/__pycache__/*
+magellan_ai/dl/mag_predict/__pycache__/*
 
 magellan_ai/dl/.DS_Store
 magellan_ai/dl/__pycache__/*

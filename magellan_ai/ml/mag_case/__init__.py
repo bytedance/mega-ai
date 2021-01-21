@@ -1,3 +1,3 @@
 # coding: utf-8
 
-__all__ = ["ml_test.py"]
+__all__ = ["ml_test"]
