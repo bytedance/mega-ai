@@ -12,6 +12,15 @@ import grpc
 import os
 
 
+def show_func():
+    print("+--------------------------+")
+    print("|predict method            |")
+    print("+--------------------------+")
+    print("|1.tf_saved_model          |")
+    print("|2.bernard_predict         |")
+    print("+--------------------------+")
+
+
 def tf_saved_model(x_train, x_valid, y_train, y_valid,
                    model_path, model_version=1):
     """save tensorflow model.
@@ -66,7 +75,7 @@ def tf_saved_model(x_train, x_valid, y_train, y_valid,
 
 
 def bernard_predict(x, hosts, input_name, output_name,
-                    model_name, model_signature_name, num_tests=1000):
+                    model_name, model_signature_name):
     """call bernard server model.
 
     Parameters
@@ -101,7 +110,7 @@ def bernard_predict(x, hosts, input_name, output_name,
     Examples
     ---------
     >>> mag_bernard.bernard_predict(x, hosts, input_name, output_name,
-    ... model_name, model_signature_name, 1000)
+    ... model_name, model_signature_name)
     """
 
     test_images = x.values
@@ -114,7 +123,7 @@ def bernard_predict(x, hosts, input_name, output_name,
     req.model_spec.signature_name = model_signature_name
 
     pred_li = []
-    for i in range(num_tests):
+    for i in range(x.shape[0]):
         test_image = np.expand_dims(test_images[i], 0)
         cur_test_image = test_image/225.0
         cur_test_image = cur_test_image.astype(np.float32)

@@ -28,6 +28,7 @@ if __name__ == "__main__":
     model_name = "default"
     model_version = 1
     model_signature_name = "serving_default"
+    print(mag_bernard.show_func())
     # mag_bernard.tf_saved_model(X_train, X_valid, y_train, y_valid,
     #                            model_path, model_version)
     # mag_bernard.bernard_predict(X_train, hosts, input_name, output_name,
