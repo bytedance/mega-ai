@@ -1,15 +1,11 @@
-import logging
+from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import cpu_count
+from collections import Counter
+from time import time
 from io import open
 from os import path
-from time import time
-from multiprocessing import cpu_count
+import logging
 import random
-from concurrent.futures import ProcessPoolExecutor
-from collections import Counter
-
-from six.moves import zip
-
-# from . import graph
 import graph
 
 logger = logging.getLogger("deepwalk")
@@ -29,6 +25,7 @@ def count_words(file):
   """
     c = Counter()
     with open(file, 'r') as f:
+
         for l in f:
             words = l.strip().split()
             c.update(words)
@@ -76,14 +73,13 @@ def write_walks_to_disk(G, file_path, number_walks, path_length, alpha=0, rand=r
     if number_walks <= number_workers:
         paths_per_worker = [1 for _ in range(number_walks)]
     else:
+        # 针对并行的worker数量分配任务
         number_sub_walk = int(number_walks / number_workers) + 1
         paths_per_worker = [len(list(filter(lambda z: z is not None, [y for y in x]))) for x in
                             graph.grouper(number_sub_walk, range(1, number_walks + 1))]
 
-    print("处理后 worker的路径为")
-    print(paths_per_worker)
     # ProcessPoolExecutor 用法
-    with ProcessPoolExecutor(max_workers=number_walks) as executor:
+    with ProcessPoolExecutor(max_workers=number_workers) as executor:
         for size, file_, ppw in zip(executor.map(count_lines, files_list), files_list, paths_per_worker):
             if always_rebuild or size != (ppw * expected_size):
                 args_list.append((ppw, path_length, alpha, random.Random(rand.randint(0, 2 ** 31)), file_))

@@ -5,7 +5,6 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from multiprocessing import cpu_count
 from gensim.models import Word2Vec
 from skipgram import Skipgram
-from six.moves import range
 
 import walks as serialized_walks
 import logging
@@ -89,24 +88,27 @@ def process(args):
                          sg=1, hs=1, negative=5, min_count=0, workers=args.workers,
                          iter=5, alpha=0.025, min_alpha=0.01)
 
+    #  数据量比较大的时候
     else:
-        print("Data size {} is larger than limit (max-memory-data-size: {}). Dumping walks to disk.".format(data_size, args.max_memory_data_size))
+        print("数据量 {} 超过限制 (max-memory-data-size: {}). 将游走记录先存入磁盘.".format(data_size, args.max_memory_data_size))
         print("随机游走生成中...")
 
-        walks_filebase = args.output + ".walks"
-        walk_files = serialized_walks.write_walks_to_disk(G, walks_filebase, number_walks=args.number_walks,
+        walks_file_path = args.output + ".walks"
+        walk_files = serialized_walks.write_walks_to_disk(G, walks_file_path, number_walks=args.number_walks,
                                                           path_length=args.walk_length, alpha=0,
                                                           rand=random.Random(args.seed),
                                                           number_workers=args.workers)
 
-        print("Counting vertex frequency...")
-        if not args.vertex_freq_degree:
-            vertex_counts = serialized_walks.count_textfiles(walk_files, args.workers)
-        else:
+        print("计算每个节点的频率...")
+        if args.vertex_freq_degree:
+
             # use degree distribution for frequency in tree
             vertex_counts = G.degree(nodes=G.iterkeys())
 
-        print("Training...")
+        else:
+            vertex_counts = serialized_walks.count_textfiles(walk_files, args.workers)
+
+        print("模型训练中...")
         walks_corpus = serialized_walks.WalksCorpus(walk_files)
         model = Skipgram(sentences=walks_corpus, vocabulary_counts=vertex_counts,
                          size=args.representation_size,
@@ -142,7 +144,7 @@ def deepwalk_entry(input_path, output_path):
     parser.add_argument('--output', default=output_path, help='表示文件的输出路径')
 
     parser.add_argument('--max-memory-data-size', default=10000000, type=int, help='将walk导入到磁盘的大小，代替放入内存中.')
-    parser.add_argument('--vertex-freq-degree', default=False, action='store_true', help='利用顶点度估计随机游动中节点的频率, '
+    parser.add_argument('--vertex-freq-degree', action='store_true', default=False, help='利用顶点度估计随机游动中节点的频率, '
                                                                                          '此选项比计算词汇表中词频的速度快.')
     parser.add_argument("--debug", default=False, action='store_true', help="如果引发异常，则删除调度器.")
     parser.add_argument('--matfile-variable-name', default='network', help='.mat文件中邻接矩阵的变量名.')
@@ -177,9 +179,7 @@ if __name__ == "__main__":
                   ".embedding "
 
     # 第一种edge表的输入
-    input_path2 = "/Users/huangning/ByteCode/magellan_ai/magellan_ai/dl/mag_graph/deepwalk/example_graphs/blogcatalog" \
-                  ".mat "
-    output_path2 = "/Users/huangning/ByteCode/magellan_ai/magellan_ai/dl/mag_graph/deepwalk/example_graphs" \
-                   "/blogcatalog.embedding "
+    input_path2 = "/Users/huangning/ByteCode/magellan_ai/magellan_ai/dl/mag_graph/deepwalk/example_graphs/blogcatalog.mat"
+    output_path2 = "/Users/huangning/ByteCode/magellan_ai/magellan_ai/dl/mag_graph/deepwalk/example_graphs/blogcatalog.embedding"
 
-    deepwalk_entry(input_path, output_path)
+    deepwalk_entry(input_path2, output_path2)
