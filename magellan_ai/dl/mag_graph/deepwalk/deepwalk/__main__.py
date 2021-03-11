@@ -138,12 +138,14 @@ def deepwalk_entry(input_path, output_path):
 
     parser = ArgumentParser("huangning-deepwalk", formatter_class=ArgumentDefaultsHelpFormatter
                             , conflict_handler='resolve')
-
     parser.add_argument('--input', default=input_path, nargs='?', help='Graph样本的输入路径')
     parser.add_argument('--output', default=output_path, help='表示文件的输出路径')
 
     parser.add_argument('--max-memory-data-size', default=10000000, type=int, help='将walk导入到磁盘的大小，代替放入内存中.')
+    parser.add_argument('--vertex-freq-degree', default=False, action='store_true', help='利用顶点度估计随机游动中节点的频率, '
+                                                                                         '此选项比计算词汇表中词频的速度快.')
     parser.add_argument("--debug", default=False, action='store_true', help="如果引发异常，则删除调度器.")
+    parser.add_argument('--matfile-variable-name', default='network', help='.mat文件中邻接矩阵的变量名.')
     parser.add_argument('--representation-size', default=64, type=int, help='每个节点的向量表示维度.')
     parser.add_argument('--walk-length', default=40, type=int, help='每个节点随机游走的长度大小.')
     parser.add_argument('--window-size', default=5, type=int, help='skip-gram模型的窗口大小.')
@@ -153,9 +155,6 @@ def deepwalk_entry(input_path, output_path):
     parser.add_argument('--seed', default=0, type=int, help='随机游走生成器的seed.')
     parser.add_argument('--workers', default=1, type=int, help='并行处理的数量.')
     parser.add_argument('--format', default='adjlist', help='输入文件的文件格式.')
-
-    parser.add_argument('--vertex-freq-degree', default=False, action='store_true', help='Use vertex degree to estimate the frequency of nodes in the random walks. This option is faster than calculating the vocabulary.')
-    parser.add_argument('--matfile-variable-name', default='network', help='variable name of adjacency matrix inside a .mat file.')
 
     # 日志信息的配置
     args = parser.parse_args()
