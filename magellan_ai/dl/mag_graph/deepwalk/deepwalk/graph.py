@@ -47,8 +47,10 @@ class Graph(defaultdict):
 
         t0 = time()
 
+        # 遍历图(字典)的key值
         for v in list(self):
             for other in self[v]:
+                # 如果key != value，即排除自身和自身对应的点，将节点的值key和value反过来，进而实现无向图
                 if v != other:
                     self[other].append(v)
 
@@ -59,13 +61,17 @@ class Graph(defaultdict):
         return self
 
     def make_consistent(self):
+
         t0 = time()
         for k in iterkeys(self):
+
+            # 将邻居节点去重，并转成列表，并从小到大排序
             self[k] = list(sorted(set(self[k])))
 
         t1 = time()
         logger.info('make_consistent: made consistent in {}s'.format(t1 - t0))
 
+        # 删除自环
         self.remove_self_loops()
 
         return self
@@ -75,9 +81,13 @@ class Graph(defaultdict):
         removed = 0
         t0 = time()
 
-        for x in self:
-            if x in self[x]:
-                self[x].remove(x)
+        # 遍历节点
+        for node_id in self:
+
+            # 判断该节点id是否是是自身的邻居
+            if node_id in self[node_id]:
+
+                self[node_id].remove(node_id)
                 removed += 1
 
         t1 = time()
@@ -85,7 +95,9 @@ class Graph(defaultdict):
         logger.info('remove_self_loops: removed {} loops in {}s'.format(removed, (t1 - t0)))
         return self
 
+    # 检查是否存在自环
     def check_self_loops(self):
+
         for x in self:
             for y in self[x]:
                 if x == y:
@@ -247,9 +259,10 @@ def load_adjacencylist(input_path, undirected=False, chunksize=10000, unchecked=
     return G
 
 
-def load_edgelist(file_, undirected=True):
+def load_edgelist(file_path, undirected=True):
     G = Graph()
-    with open(file_) as f:
+    with open(file_path) as f:
+
         for l in f:
             x, y = l.strip().split()[:2]
             x = int(x)
@@ -263,7 +276,10 @@ def load_edgelist(file_, undirected=True):
 
 
 def load_matfile(file_, variable_name="network", undirected=True):
+
+
     mat_varables = loadmat(file_)
+
     mat_matrix = mat_varables[variable_name]
 
     return from_numpy(mat_matrix, undirected)
@@ -287,6 +303,8 @@ def from_numpy(x, undirected=True):
 
     if issparse(x):
         cx = x.tocoo()
+
+        # 将稀疏矩阵的非零元素的行，列，以及对应的数值取出来
         for i, j, v in zip(cx.row, cx.col, cx.data):
             G[i].append(j)
     else:

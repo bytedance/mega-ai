@@ -117,7 +117,7 @@ def process(args):
     model.wv.save_word2vec_format(args.output)
 
 
-def deepwalk_entry(input_path, output_path):
+def deepwalk_entry(in_path, out_path):
     """
     ArgumentParser.add_argument 参数说明
     1. nargs: 设置参数可以提供的个数, x的候选值如下
@@ -140,8 +140,8 @@ def deepwalk_entry(input_path, output_path):
 
     parser = ArgumentParser("huangning-deepwalk", formatter_class=ArgumentDefaultsHelpFormatter
                             , conflict_handler='resolve')
-    parser.add_argument('--input', default=input_path, nargs='?', help='Graph样本的输入路径')
-    parser.add_argument('--output', default=output_path, help='表示文件的输出路径')
+    parser.add_argument('--input', default=in_path, nargs='?', help='Graph样本的输入路径')
+    parser.add_argument('--output', default=out_path, help='表示文件的输出路径')
 
     parser.add_argument('--max-memory-data-size', default=10000000, type=int, help='将walk导入到磁盘的大小，代替放入内存中.')
     parser.add_argument('--vertex-freq-degree', action='store_true', default=False, help='利用顶点度估计随机游动中节点的频率, '
@@ -167,6 +167,9 @@ def deepwalk_entry(input_path, output_path):
     if args.debug:
         sys.excepthook = debug
 
+    print("当前的参数配置信息为")
+    print(args)
+
     # 开始处理deepwalk
     process(args)
 
@@ -174,12 +177,11 @@ def deepwalk_entry(input_path, output_path):
 if __name__ == "__main__":
 
     # 第一种邻接表的输入
-    input_path = "/Users/huangning/ByteCode/magellan_ai/magellan_ai/dl/mag_graph/deepwalk/example_graphs/karate.adjlist"
-    output_path = "/Users/huangning/ByteCode/magellan_ai/magellan_ai/dl/mag_graph/deepwalk/example_graphs/karate" \
-                  ".embedding "
+    input_path1 = "../example_graphs/karate.adjlist"
+    output_path1 = "../example_graphs/karate.embedding"
 
     # 第一种edge表的输入
     input_path2 = "/Users/huangning/ByteCode/magellan_ai/magellan_ai/dl/mag_graph/deepwalk/example_graphs/blogcatalog.mat"
     output_path2 = "/Users/huangning/ByteCode/magellan_ai/magellan_ai/dl/mag_graph/deepwalk/example_graphs/blogcatalog.embedding"
 
-    deepwalk_entry(input_path2, output_path2)
+    deepwalk_entry(input_path1, output_path1)
