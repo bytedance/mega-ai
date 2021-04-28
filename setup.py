@@ -41,7 +41,7 @@ except IOError:
 
 setup(
       name='byted-'+NAME,
-      version='1.4.3',
+      version='1.4.4',
       description=DESCRIPTION,
       long_description=long_description,
       long_description_content_type="text/markdown",
