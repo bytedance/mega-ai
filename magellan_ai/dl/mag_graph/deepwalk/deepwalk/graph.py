@@ -336,7 +336,7 @@ def from_adjlist_unchecked(adjlist):
         node = row[0]
         neighbors = row[1:]
 
-        # key=根节点id，value=临节点id
+        # key=根节点id，value=邻居节点id
         G[node] = neighbors
 
     return G

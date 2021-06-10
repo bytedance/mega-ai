@@ -14,7 +14,7 @@ AUTHOR = 'huang ning'
 REQUIRES = ["numpy>=1.16.0,<1.19.1",
             "pandas>=1.0.4,<1.2.0",
             "scikit-learn>=0.21.3,<0.23.1",
-            "six>=1.11.0,<2.0.0",
+            "six>=1.10.0,<2.0.0",
             "tensorflow>=2.0.0,<2.4.0",
             "pyarrow>=1.0.0, <=4.0.0",
             "openpyxl>=3.0.0, <4.0.0",
