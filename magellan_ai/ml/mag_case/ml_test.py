@@ -9,6 +9,7 @@ warnings.filterwarnings("ignore")
 if __name__ == "__main__":
 
     # show doc string
+    print("测试")
     print(help(mag_metrics))
 
     # # Function visualization
