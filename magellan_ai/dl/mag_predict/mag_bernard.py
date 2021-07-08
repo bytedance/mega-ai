@@ -75,7 +75,7 @@ def tf_saved_model(x_train, x_valid, y_train, y_valid,
 
 
 def bernard_predict(x, hosts, input_name, output_name,
-                    model_name, model_signature_name):
+                    model_name, model_signature_name, num_tests):
     """call bernard server model.
 
     Parameters

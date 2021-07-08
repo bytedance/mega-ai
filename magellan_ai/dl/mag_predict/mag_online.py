@@ -42,7 +42,7 @@ def dump_feats_json(model_name, feat_names, feat_path):
     >>> feat_path = "path/to/sample/xxx.json"
     >>> feat_names = ["aaa", "bbb", "ccc"]
     >>> model_name = "templete_model.bin"
-    >>> export_feats_json(model_name, feat_names, feat_path)
+    >>> dump_feats_json(model_name, feat_names, feat_path)
 
     Notes
     -----
@@ -77,9 +77,9 @@ def clean_table(input_path, output_path):
 
     Examples
     ----------
-    >>> intput_path = "path/to/sample/xxx.xlsx"
-    >>> output_path = "path/to/sample/yyy.xlsx"
-    >>> clean_table(intput_path, output_path)
+    >>> in_path = "path/to/sample/xxx.xlsx"
+    >>> out_path = "path/to/sample/yyy.xlsx"
+    >>> clean_table(in_path, out_path)
 
     Notes
     -----
@@ -144,7 +144,7 @@ def export_feats_map(input_path, feat_names,
     output_path : str
         The path to save Schema infos on decision platform.
 
-    convert_type : {'v1_map_get', 'v2_feat_group', "v2_make_json"},
+    convert_type : {'v1_map_get', 'v2_group_feat', 'v2_hive_feat', "v2_make_json"},
                    default='v1_map_get'
         Save feature information in the specified format.
 
@@ -166,11 +166,11 @@ def export_feats_map(input_path, feat_names,
     This method only deals with the case that the features are numerical.
     """
 
-    # Read all sheets in the financial portfile excel
+    # Read all sheets in the financial profile excel
     data_dict = pd.read_excel(input_path, sheet_name=None, index_col=None)
     res, marked = [("zero", "zero")] * len(feat_names), [0] * len(feat_names)
 
-    # Add the porfile group name and the porfile feature name to res
+    # Add the (profile_group_name, profile_feature_name) to res list
     def find_group_feat(data_df):
         for row_index, row in data_df.iterrows():
 
@@ -200,16 +200,59 @@ def export_feats_map(input_path, feat_names,
                     else:
                         res[i] = (profile_group_name, profile_feature_name)
 
+    # Add the (hive_table_name, profile_feature_name) to res
+    def find_hive_feat(data_df):
+        for row_index, row in data_df.iterrows():
+
+            # Get the profile group name, profile feature name
+            # and hive feature name, of the current line
+            if row["hive表名 / kafka topic"] is np.nan or row["hive字段名 / kafka 字段名"] is np.nan:
+                continue
+            else:
+                hive_table_name = row["hive表名 / kafka topic"]
+                hive_feature_name = row["hive字段名 / kafka 字段名"]
+
+            profile_feature_name = row["画像特征名"] if \
+                row["画像特征名"] is not np.nan else ""
+
+            # Traverse the hive feature name to match
+            for i, col_name in enumerate(feat_names):
+                if marked[i] == 1:
+                    continue
+                if col_name == hive_feature_name:
+                    marked[i] = 1
+                    if len(profile_feature_name) == 0:
+                        res[i] = (hive_table_name, hive_feature_name)
+                        print("The current profile feature name does "
+                              "not exist, use current hive feature "
+                              "name <{}> instead"
+                              .format(hive_feature_name))
+                    else:
+                        res[i] = (hive_table_name, profile_feature_name)
+
     # Remove all unavailable sheets
     for key, tmp_df in data_dict.items():
-
-        if "组名" not in tmp_df.columns or "hive字段名 / kafka 字段名" \
-                not in tmp_df.columns or "画像特征名" not in tmp_df.columns:
+        if "hive表名 / kafka topic" not in tmp_df.columns:
             print("current sheet: {} has incomplete "
-                  "information，skip current sheet".format(key))
+                  "information about: ，skip current sheet".format(key, "hive表名 / kafka topic"))
+            continue
+        elif "hive字段名 / kafka 字段名" not in tmp_df.columns:
+            print("current sheet: {} has incomplete "
+                  "information about: ，skip current sheet".format(key, "hive字段名 / kafka 字段名"))
+            continue
+        elif "画像特征名" not in tmp_df.columns:
+            print("current sheet: {} has incomplete "
+                  "information about: ，skip current sheet".format(key, "画像特征名"))
+            continue
+        elif "组名" not in tmp_df.columns:
+            print("current sheet: {} has incomplete "
+                  "information about: ，skip current sheet".format(key, "组名"))
             continue
 
-        find_group_feat(tmp_df)
+        elif convert_type == "v2_hive_feat":
+            find_hive_feat(tmp_df)
+        else:
+            find_group_feat(tmp_df)
 
     if convert_type == "v1_map_get":
         #  Save feats info as map(hiveFeatsName,
@@ -230,8 +273,8 @@ def export_feats_map(input_path, feat_names,
         with open(output_path, "w") as f:
             f.write(schema)
 
-    elif convert_type == "v2_feat_group":
-        #  Save feats info as profileName__profileGroupName\n, ...
+    elif convert_type == "v2_group_feat":
+        # Save feats info as mktGroupName__mktFeatureName\n, ...
         res_str = ""
         for index, feat in enumerate(feat_names):
             assert res[index][0] != "zero", \
@@ -247,6 +290,24 @@ def export_feats_map(input_path, feat_names,
         with open(output_path, "w") as f:
             f.write(schema)
 
+    elif convert_type == "v2_hive_feat":
+        #  Save feats info as hiveTableName__mktFeatureName\n, ...
+        res_str = ""
+        for index, feat in enumerate(res):
+            assert res[index][0] != "zero", \
+                "current hive feature:{}'s " \
+                "hive table name is not found".format(feat)
+            assert len(res[index][0]) != 0 and len(res[index][1]) != 0, \
+                "The length of hive table name or " \
+                "profile feature name cannot be 0"
+            cur_group_name = res[index][0].strip("\n")
+            res_str += cur_group_name + "__%s\n" % (res[index][1])
+
+        schema = res_str[:-1] + ""
+        with open(output_path, "w") as f:
+            f.write(schema)
+
+    # the v2_make_json method will be deprecated
     elif convert_type == "v2_make_json":
 
         # Save feats info as caijing_dmp.make_json(

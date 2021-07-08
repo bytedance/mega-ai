@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, \
     print_function, unicode_literals
 
 from sklearn.model_selection import train_test_split
+from magellan_ai.dl.mag_predict import mag_online
 from magellan_ai.dl.mag_predict import mag_bernard
 from magellan_ai.ml.mag_util import mag_metrics
 import pandas as pd
@@ -10,25 +11,33 @@ import pandas as pd
 
 if __name__ == "__main__":
 
-    # load data
-    label_name = "is_bind_pay_success"
-    data_df = pd.read_csv("../../../data/bankpay_sample.csv")
-    data_df.fillna(0, inplace=True)
-    dou_cover = mag_metrics.cal_feature_coverage(data_df.iloc[:, 2:])
-    dou_feats = dou_cover[dou_cover["coverage"] > 0.01]["feature"].tolist()
-    X, y = data_df[dou_feats], data_df[label_name]
+    # ----------------------------------------------------
+    # export model feature list
+    input_path = "../../../data/caijing_profile_clean.xlsx"
+    output_path = "../../../data/mkt_catboost_hive_feats.txt"
+    with open("../../../data/dou_feat_list.txt", "r") as f:
+        feat_str = f.read()
+    feat_list = feat_str.split("\n")
+    mag_online.export_feats_map(input_path, feat_list, output_path, convert_type="v2_hive_feat")
 
     # ----------------------------------------------------
     # Bernard server test code
-    X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.3)
-    model_path = "./python_pay_model/"
-    hosts = "10.150.128.73:9333"
-    input_name = "dense_input"
-    output_name = "dense_1"
-    model_name = "default"
-    model_version = 1
-    model_signature_name = "serving_default"
-    print(mag_bernard.show_func())
+    # label_name = "is_bind_pay_success"
+    # data_df = pd.read_csv("../../../data/bankpay_sample.csv")
+    # data_df.fillna(0, inplace=True)
+    # dou_cover = mag_metrics.cal_feature_coverage(data_df.iloc[:, 2:])
+    # dou_feats = dou_cover[dou_cover["coverage"] > 0.01]["feature"].tolist()
+    # X, y = data_df[dou_feats], data_df[label_name]
+    # X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.3)
+    # model_path = "./python_pay_model/"
+    # hosts = "10.150.128.73:9333"
+    # input_name = "dense_input"
+    # output_name = "dense_1"
+    # model_name = "default"
+    # model_version = 1
+    # model_signature_name = "serving_default"
+    # print(mag_bernard.show_func())
+
     # mag_bernard.tf_saved_model(X_train, X_valid, y_train, y_valid,
     #                            model_path, model_version)
     # mag_bernard.bernard_predict(X_train, hosts, input_name, output_name,
