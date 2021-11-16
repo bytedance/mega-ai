@@ -11,9 +11,9 @@ DESCRIPTION = 'Some computing tools with machine learning'
 AUTHOR = 'huang ning'
 
 # The dependent version required for the project to run
-REQUIRES = ["numpy>=1.16.0,<1.19.1",
-            "pandas>=1.0.4,<1.2.0",
-            "scikit-learn>=0.21.3,<0.23.1",
+REQUIRES = ["numpy>=1.13.0,<1.21.3",
+            "pandas>=0.24.0,<1.2.0",
+            "scikit-learn>=0.20.3,<0.25.0",
             "six>=1.10.0,<2.0.0",
             "tensorflow>=2.2.0,<2.4.0",
             "tensorflow-serving-api>=2.2.0",
@@ -29,7 +29,7 @@ REQUIRES = ["numpy>=1.16.0,<1.19.1",
             "scipy>=0.15.0",
             "psutil>=2.1.1",
             "networkx>=2.0",
-            ""
+            "matplotlib>1.0.0"
             ]
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -42,7 +42,7 @@ except IOError:
 
 setup(
       name='byted-'+NAME,
-      version='1.4.4',
+      version='1.4.5',
       description=DESCRIPTION,
       long_description=long_description,
       long_description_content_type="text/markdown",
