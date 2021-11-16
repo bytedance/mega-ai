@@ -85,11 +85,13 @@ def cal_ks(y_true, y_pred):
     The length of real label and prediction probability should be consisten.
     """
 
-    fpr, tpr, thresholds = roc_curve(y_true, y_pred)
-    tpr_fpr_gap = abs(fpr - tpr)
-    ks = max(tpr_fpr_gap)
-    cutoff = thresholds[tpr_fpr_gap == ks][0]
-    return cutoff, ks
+    if len(set(y_true)) > 1:
+        fpr, tpr, thresholds = roc_curve(y_true, y_pred)
+        tpr_fpr_gap = abs(tpr - fpr)
+        ks = max(tpr_fpr_gap)
+        cutoff = thresholds[tpr_fpr_gap == ks][0]
+        return cutoff, ks
+    return -1, -1
 
 
 def cal_auc(y_true, y_pred):
@@ -139,18 +141,9 @@ def cal_auc(y_true, y_pred):
     The length of real label and prediction probability should be consisten.
     """
 
-    # y_true = np.array(y_true)
-    # y_pred = np.array(y_pred)
-    # rank = [label_value for prob_value, label_value in
-    #         sorted(zip(y_pred, y_true), key=lambda x: x[0])]
-    # rank_list = [index + 1 for index, label_value in
-    #              enumerate(rank) if label_value == 1]
-    # pos_num, neg_num = \
-    #     len(y_true[y_true == 1]), len(y_true[y_true == 0])
-    # auc = (sum(rank_list) -
-    #        (pos_num * (pos_num + 1)) / 2) / (pos_num * neg_num)
-
-    return roc_auc_score(y_true, y_pred)
+    if len(set(y_true)) > 1:
+        return roc_auc_score(y_true, y_pred)
+    return -1
 
 
 def cal_lift(y_true, y_pred, k_part=10):
