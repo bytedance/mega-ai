@@ -266,25 +266,25 @@ def cal_psi(base_score, cur_score, k_part=10):
     ----------
     >>> y_train_pred_li = [0.1, 0.6, 0.3, 0.8, 0.6, 0.2]
     >>> y_test_pred_li = [0.2, 0.3, 0.4, 0.9, 0.2, 0.1]
-    >>> psi = mag_metrics.cal_psi(y_train_pred_li, y_test_pred_li)
-    >>> psi
+    >>> psi_value = mag_metrics.cal_psi(y_train_pred_li, y_test_pred_li)
+    >>> psi_value
     1.4674292331341745
 
     >>> y_train_pred_arr = np.array([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
     >>> y_test_pred_arr = np.array([0.2, 0.3, 0.4, 0.9, 0.2, 0.1])
-    >>> psi = mag_metrics.cal_psi(y_train_pred_arr, y_test_pred_arr)
-    >>> psi
+    >>> psi_value = mag_metrics.cal_psi(y_train_pred_arr, y_test_pred_arr)
+    >>> psi_value
     1.4674292331341745
 
     >>> y_test_pred_ser = pd.Series([0.2, 0.3, 0.4, 0.9, 0.2, 0.1])
-    >>> psi = mag_metrics.cal_psi(y_train_pred_ser, y_test_pred_ser)
-    >>> psi
+    >>> psi_value = mag_metrics.cal_psi(y_train_pred_ser, y_test_pred_ser)
+    >>> psi_value
     1.4674292331341745
 
     >>> y_train_pred_df = pd.DataFrame([0.1, 0.6, 0.3, 0.8, 0.6, 0.2])
     >>> y_test_pred_df = pd.DataFrame([0.2, 0.3, 0.4, 0.9, 0.2, 0.1])
-    >>> psi = mag_metrics.cal_psi(y_train_pred_df, y_test_pred_df)
-    >>> psi
+    >>> psi_value = mag_metrics.cal_psi(y_train_pred_df, y_test_pred_df)
+    >>> psi_value
     array([1.46742923])
     """
 
@@ -742,6 +742,7 @@ def chisquare_binning_boundary(input_df, feat_name, label_name, k_part):
     return boundary
 
 
+# 决策树分箱
 def decisiontree_binning_boundary(input_df, feat_name, label_name, k_part):
     """Calculate binning threshold list by decisionTree binning method.
 

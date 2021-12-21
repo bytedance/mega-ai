@@ -11,16 +11,16 @@ DESCRIPTION = 'Some computing tools with machine learning'
 AUTHOR = 'huang ning'
 
 # The dependent version required for the project to run
-REQUIRES = ["numpy>=1.13.0,<1.21.3",
-            "pandas>=0.24.0,<1.2.0",
+REQUIRES = ["numpy>=1.13.0,<=1.21.4",
+            "pandas>=0.24.0,<=1.3.4",
             "scikit-learn>=0.20.3,<0.25.0",
             "six>=1.7.3,<2.0.0",
             "tensorflow>=2.2.0,<2.4.0",
             "tensorflow-serving-api>=2.2.0",
-            "pyarrow>=1.0.0, <=4.0.0",
+            "pyarrow>=1.0.0, <=6.0.0",
             "openpyxl>=3.0.0, <4.0.0",
             "xlrd>=1.0.0, <2.0.0",
-            "keras>=2.4.3, <3.0.0",
+            "keras>=2.2.3, <3.0.0",
             "gensim>=1.0.0",
             "wheel>=0.23.0",
             "Cython>=0.20.2",
