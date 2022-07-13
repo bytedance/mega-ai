@@ -10,9 +10,7 @@
 # 时间复杂度O(n), 秘密技巧只用来挽留, 将问题拆解成留住的的挽留的人群
 def max_customer(customers, smile, minutes):
 
-    # 所有不生气时间内的顾客总数 + 先计算起始的[0, X)分钟内挽留不满意的客户
     result = total_sum = sum([customers[i] for i in range(len(customers)) if smile[i]==1 or i < minutes])
-    print(result)
 
     for i in range(minutes, len(customers)):
         total_sum = total_sum + customers[i] * (1-smile[i]) - customers[i-minutes] * (1-smile[i-minutes])
@@ -23,12 +21,9 @@ def max_customer(customers, smile, minutes):
 
 if __name__ == "__main__":
 
-    print("请输入顾客数组")
+    minutes = int(input().split(",")[1])
     customers = list(map(int, input().split(",")))
-    print("请输入生气数组")
     grumpy = list(map(int, input().split(",")))
-    print("奶茶店保持微笑")
-    minutes = int(input())
 
     res = max_customer(customers, grumpy, minutes)
-    print("最大满意的顾客数量为:", res)
+    print(res)
