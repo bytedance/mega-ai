@@ -21,13 +21,18 @@ magellan_ai/ml/mag_util/.DS_Store
 magellan_ai/ml/mag_util/__pycache__/*
 magellan_ai/ml/mag_case/__pycache__/*
 
-magellan_ai/dl/mag_graph/deepwalk/__pycache__/*
+magellan_ai/ml/mag_graph/deepwalk/__pycache__/*
 magellan_ai/dl/mag_predict/__pycache__/*
 magellan_ai/dl/mag_dnn/__pycache__/*
 magellan_ai/dl/mag_nlp/__pycache__/*
-magellan_ai/dl/mag_graph/data/*
+magellan_ai/ml/mag_graph/data/*
 magellan_ai/dl/__pycache__/*
 magellan_ai/dl/.DS_Store
+
+
+# 模仿重复, 后续要进行修改
+magellan_ai/dl/mag_mining/deepfm.py
+magellan_ai/ml/mag_util/mag_metrics.py
 
 
 
